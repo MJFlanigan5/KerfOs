@@ -1,11 +1,12 @@
 """
-Database models for Modology Cabinet Designer
-Includes cabinet-specific models + user auth + collaboration
+Database models for KerfOS - Full SaaS Integration
+Includes cabinet-specific models + user auth + collaboration + billing
 """
-from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text, Table
+from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text, Table, Numeric
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.database import Base
+import uuid
 
 
 # Association table for many-to-many relationship between projects and cabinets
@@ -18,7 +19,7 @@ project_cabinets = Table(
 
 
 class User(Base):
-    """User model for authentication and collaboration"""
+    """User model for authentication, collaboration, and billing"""
     __tablename__ = "users"
     
     id = Column(Integer, primary_key=True, index=True)
@@ -28,9 +29,30 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     is_active = Column(Boolean, default=True)
     
+    # SaaS/Billing fields
+    tier = Column(String, default='free')  # free, maker, shop, pro
+    stripe_customer_id = Column(String, nullable=True)
+    stripe_subscription_id = Column(String, nullable=True)
+    
     # Relationships
     projects = relationship("Project", back_populates="owner")
     shared_projects = relationship("ProjectShare", back_populates="user")
+    usage_events = relationship("UsageEvent", back_populates="user", cascade="all, delete-orphan")
+
+
+class UsageEvent(Base):
+    """Track usage for tier limits"""
+    __tablename__ = "usage_events"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    event_type = Column(String(50), nullable=False)  # create, generate, export
+    resource_type = Column(String(50), nullable=False)  # project, cut_list, export
+    resource_id = Column(Integer, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    user = relationship("User", back_populates="usage_events")
 
 
 class Project(Base):
@@ -40,7 +62,7 @@ class Project(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False, index=True)
     description = Column(Text, nullable=True)
-    owner_id = Column(Integer, ForeignKey("users.id"), nullable=True)  # Nullable for backward compat
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     is_public = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -102,9 +124,12 @@ class Material(Base):
     sheet_width = Column(Float, default=48.0)  # Standard 4x8 sheet width
     sheet_height = Column(Float, default=96.0)  # Standard 4x8 sheet height
     price_per_sqft = Column(Float)  # Price per square foot
+    price_per_sheet = Column(Numeric(10, 2), default=0.0)  # Price per sheet
     supplier = Column(String, nullable=True)
     description = Column(Text, nullable=True)
     is_active = Column(Boolean, default=True)
+    is_custom = Column(Boolean, default=False)  # User-created material
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)  # If custom material
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
