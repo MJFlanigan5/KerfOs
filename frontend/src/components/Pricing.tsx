@@ -125,7 +125,7 @@ export default function PricingPage() {
                       </li>
                     ))}
                   {tier.tier === 'pro' && (
-                    <li className={tier.tier === 'maker' ? 'text-indigo-100' : 'text-gray-600'}>
+                    <li className="text-gray-600">
                       • All features included
                     </li>
                   )}
