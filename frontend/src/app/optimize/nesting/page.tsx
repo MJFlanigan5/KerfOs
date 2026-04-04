@@ -1,9 +1,14 @@
 import AdvancedNesting from '@/components/AdvancedNesting'
+import { PageHeader } from '@/components/PageHeader'
 
 export default function NestingPage() {
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Advanced Nesting</h1>
+    <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '48px 40px' }}>
+      <PageHeader
+        crumbs={[{ label: 'kerfos', href: '/' }, { label: 'optimize', href: '/optimize' }, { label: 'nesting' }]}
+        title="Advanced Nesting"
+        subtitle="Non-guillotine nesting algorithm that places every part for maximum sheet yield."
+      />
       <AdvancedNesting />
     </div>
   )

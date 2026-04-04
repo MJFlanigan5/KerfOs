@@ -1,10 +1,15 @@
 'use client'
 import DesignExporter from '@/components/DesignExporter'
+import { PageHeader } from '@/components/PageHeader'
 
 export default function Export3DPage() {
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">3D Export</h1>
+    <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '48px 40px' }}>
+      <PageHeader
+        crumbs={[{ label: 'kerfos', href: '/' }, { label: 'export', href: '/export' }, { label: '3d-cad' }]}
+        title="3D / CAD Export"
+        subtitle="Export OBJ, STL, 3MF, and DXF files for visualization or downstream fabrication."
+      />
       <DesignExporter cabinet={null} />
     </div>
   )

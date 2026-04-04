@@ -1,10 +1,31 @@
+import { PageHeader } from '@/components/PageHeader'
+
 export default function CostOptimizerPage() {
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-4">Cost Optimizer</h1>
-      <p className="text-gray-600 mb-8">Analyze your project costs and find savings opportunities.</p>
-      <div className="border border-dashed border-gray-300 rounded-xl p-12 text-center text-gray-400">
-        Cost Optimizer — coming soon
+    <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '48px 40px' }}>
+      <PageHeader
+        crumbs={[{ label: 'kerfos', href: '/' }, { label: 'optimize', href: '/optimize' }, { label: 'cost-optimizer' }]}
+        title="Cost Optimizer"
+        subtitle="Analyze your project and find material substitutions that cut cost without cutting quality."
+      />
+      <div
+        style={{
+          padding: '48px',
+          border: '1px solid var(--k-border)',
+          background: 'var(--k-surface)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '12px',
+          minHeight: '240px',
+          textAlign: 'center',
+        }}
+      >
+        <span className="k-label" style={{ color: 'var(--k-amber)' }}>Pro Feature</span>
+        <p style={{ fontSize: '15px', color: 'var(--k-ink-3)', maxWidth: '360px', lineHeight: 1.6 }}>
+          Cost Optimizer is available on the Pro plan. Upgrade to analyze substitutions and track spend across projects.
+        </p>
       </div>
     </div>
   )

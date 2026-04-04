@@ -1,26 +1,57 @@
 import Link from 'next/link'
 import { Layers, GitMerge, AlignCenter } from 'lucide-react'
+import { ToolCard } from '@/components/ToolCard'
+import { PageHeader } from '@/components/PageHeader'
 
 const tools = [
-  { href: '/materials/selector', label: 'Material Selector', description: 'Browse and select sheet goods, hardwoods, and composites', icon: Layers },
-  { href: '/materials/multi', label: 'Multi-Material Projects', description: 'Manage projects with multiple materials and species', icon: GitMerge },
-  { href: '/materials/edge-banding', label: 'Edge Banding', description: 'Configure edge banding for exposed panel edges', icon: AlignCenter },
+  {
+    href: '/materials/selector',
+    label: 'Material Selector',
+    description: 'Browse sheet goods, hardwoods, and composites with live pricing',
+    icon: Layers,
+    plan: 'Free' as const,
+    featured: true,
+  },
+  {
+    href: '/materials/multi',
+    label: 'Multi-Material Projects',
+    description: 'Combine different species and sheet goods in a single project',
+    icon: GitMerge,
+    plan: 'Hobbyist' as const,
+  },
+  {
+    href: '/materials/edge-banding',
+    label: 'Edge Banding',
+    description: 'Configure PVC, veneer, or solid wood banding on exposed edges',
+    icon: AlignCenter,
+    plan: 'Hobbyist' as const,
+  },
 ]
 
 export default function MaterialsPage() {
   return (
-    <div className="max-w-7xl mx-auto px-4 py-10">
-      <h1 className="text-3xl font-bold text-gray-900 mb-2">Materials</h1>
-      <p className="text-gray-600 mb-8">Select and manage materials for your projects.</p>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {tools.map(({ href, label, description, icon: Icon }) => (
-          <Link key={href} href={href} className="group border border-gray-200 rounded-xl p-6 hover:border-blue-500 hover:shadow-md transition-all">
-            <div className="flex items-center gap-3 mb-2">
-              <Icon className="w-6 h-6 text-blue-600" />
-              <span className="text-lg font-semibold text-gray-900 group-hover:text-blue-600">{label}</span>
-            </div>
-            <p className="text-gray-500 text-sm">{description}</p>
+    <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '48px 40px' }}>
+      <PageHeader
+        crumbs={[{ label: 'kerfos', href: '/' }, { label: 'materials' }]}
+        title="Materials"
+        subtitle="Select and manage sheet goods, hardwoods, and edge treatments."
+        action={
+          <Link href="/materials/selector" className="k-btn k-btn-primary k-btn-sm">
+            Browse materials
           </Link>
+        }
+      />
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, 1fr)',
+          gap: '1px',
+          background: 'var(--k-border)',
+          border: '1px solid var(--k-border)',
+        }}
+      >
+        {tools.map((tool) => (
+          <ToolCard key={tool.href} {...tool} />
         ))}
       </div>
     </div>

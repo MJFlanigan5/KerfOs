@@ -1,25 +1,50 @@
 import Link from 'next/link'
 import { Search, Star } from 'lucide-react'
+import { ToolCard } from '@/components/ToolCard'
+import { PageHeader } from '@/components/PageHeader'
 
 const tools = [
-  { href: '/hardware/finder', label: 'Hardware Finder', description: 'Find the right hinges, slides, and pulls for your build', icon: Search },
-  { href: '/hardware/recommendations', label: 'Recommendations', description: 'AI-powered hardware recommendations based on your design', icon: Star },
+  {
+    href: '/hardware/finder',
+    label: 'Hardware Finder',
+    description: 'Browse hinges, drawer slides, pulls, and fasteners matched to your build',
+    icon: Search,
+    plan: 'Hobbyist' as const,
+    featured: true,
+  },
+  {
+    href: '/hardware/recommendations',
+    label: 'Smart Recommendations',
+    description: 'AI-suggested hardware based on your cabinet dimensions and style',
+    icon: Star,
+    plan: 'Pro' as const,
+  },
 ]
 
 export default function HardwarePage() {
   return (
-    <div className="max-w-7xl mx-auto px-4 py-10">
-      <h1 className="text-3xl font-bold text-gray-900 mb-2">Hardware</h1>
-      <p className="text-gray-600 mb-8">Find and configure hardware for your cabinet builds.</p>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {tools.map(({ href, label, description, icon: Icon }) => (
-          <Link key={href} href={href} className="group border border-gray-200 rounded-xl p-6 hover:border-blue-500 hover:shadow-md transition-all">
-            <div className="flex items-center gap-3 mb-2">
-              <Icon className="w-6 h-6 text-blue-600" />
-              <span className="text-lg font-semibold text-gray-900 group-hover:text-blue-600">{label}</span>
-            </div>
-            <p className="text-gray-500 text-sm">{description}</p>
+    <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '48px 40px' }}>
+      <PageHeader
+        crumbs={[{ label: 'kerfos', href: '/' }, { label: 'hardware' }]}
+        title="Hardware"
+        subtitle="Find and configure hardware that fits your cabinet design exactly."
+        action={
+          <Link href="/hardware/finder" className="k-btn k-btn-primary k-btn-sm">
+            Find hardware
           </Link>
+        }
+      />
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, 1fr)',
+          gap: '1px',
+          background: 'var(--k-border)',
+          border: '1px solid var(--k-border)',
+        }}
+      >
+        {tools.map((tool) => (
+          <ToolCard key={tool.href} {...tool} />
         ))}
       </div>
     </div>

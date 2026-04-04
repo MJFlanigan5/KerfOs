@@ -1,9 +1,14 @@
 import TemplateGallery from '@/components/TemplateGallery'
+import { PageHeader } from '@/components/PageHeader'
 
 export default function TemplatesPage() {
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Project Templates</h1>
+    <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '48px 40px' }}>
+      <PageHeader
+        crumbs={[{ label: 'kerfos', href: '/' }, { label: 'design', href: '/design' }, { label: 'templates' }]}
+        title="Project Templates"
+        subtitle="Full kitchen, bath, laundry, and shop project starting points."
+      />
       <TemplateGallery />
     </div>
   )

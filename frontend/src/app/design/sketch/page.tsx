@@ -1,11 +1,16 @@
 'use client'
 import SketchToDesign from '@/components/SketchToDesign'
+import { PageHeader } from '@/components/PageHeader'
 
 export default function SketchPage() {
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Sketch Import</h1>
-      <SketchToDesign onDesignGenerated={(design) => console.log('Design generated', design)} />
+    <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '48px 40px' }}>
+      <PageHeader
+        crumbs={[{ label: 'kerfos', href: '/' }, { label: 'design', href: '/design' }, { label: 'sketch-import' }]}
+        title="Sketch Import"
+        subtitle="Snap a photo of your hand sketch and convert it directly to a cabinet plan."
+      />
+      <SketchToDesign onDesignGenerated={() => {}} />
     </div>
   )
 }

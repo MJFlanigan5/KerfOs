@@ -1,9 +1,14 @@
 import EdgeBanding from '@/components/EdgeBanding'
+import { PageHeader } from '@/components/PageHeader'
 
 export default function EdgeBandingPage() {
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Edge Banding</h1>
+    <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '48px 40px' }}>
+      <PageHeader
+        crumbs={[{ label: 'kerfos', href: '/' }, { label: 'materials', href: '/materials' }, { label: 'edge-banding' }]}
+        title="Edge Banding"
+        subtitle="Configure PVC, veneer, or solid wood banding on any exposed panel edge."
+      />
       <EdgeBanding />
     </div>
   )
