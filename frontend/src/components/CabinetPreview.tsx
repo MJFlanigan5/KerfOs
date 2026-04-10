@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import { useRef } from "react";
+import { Canvas } from "@react-three/fiber";
+import { OrbitControls, Grid, Environment, GizmoHelper, GizmoViewport } from "@react-three/drei";
 import * as THREE from "three";
 import { Cabinet, Material } from "./CabinetBuilder";
 
@@ -9,250 +11,169 @@ interface CabinetPreviewProps {
   material: Material | null;
 }
 
-export default function CabinetPreview({ cabinet, material }: CabinetPreviewProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const sceneRef = useRef<THREE.Scene | null>(null);
-  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
-  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
-  const cabinetMeshRef = useRef<THREE.Group | null>(null);
+// ─── Cabinet mesh ────────────────────────────────────────────────────────────
 
-  useEffect(() => {
-    if (!containerRef.current) return;
+function CabinetMesh({ cabinet, material }: CabinetPreviewProps) {
+  const color = getMaterialColor(material?.type);
+  const thickness = (material?.thickness ?? 0.75) / 12;
 
-    // Scene setup
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0f0a07);
-    sceneRef.current = scene;
-
-    // Camera setup
-    const camera = new THREE.PerspectiveCamera(
-      45,
-      containerRef.current.clientWidth / containerRef.current.clientHeight,
-      0.1,
-      1000
-    );
-    camera.position.set(5, 5, 8);
-    camera.lookAt(0, 2.5, 0);
-    cameraRef.current = camera;
-
-    // Renderer setup
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(
-      containerRef.current.clientWidth,
-      containerRef.current.clientHeight
-    );
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    containerRef.current.appendChild(renderer.domElement);
-    rendererRef.current = renderer;
-
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-    scene.add(ambientLight);
-
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(5, 10, 7);
-    directionalLight.castShadow = true;
-    directionalLight.shadow.mapSize.width = 1024;
-    directionalLight.shadow.mapSize.height = 1024;
-    scene.add(directionalLight);
-
-    // Ground plane
-    const groundGeometry = new THREE.PlaneGeometry(20, 20);
-    const groundMaterial = new THREE.MeshStandardMaterial({ 
-      color: 0x333333,
-      roughness: 0.8
-    });
-    const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-    ground.rotation.x = -Math.PI / 2;
-    ground.receiveShadow = true;
-    scene.add(ground);
-
-    // Grid helper
-    const gridHelper = new THREE.GridHelper(20, 20, 0x555555, 0x333333);
-    scene.add(gridHelper);
-
-    // Animation loop
-    const animate = () => {
-      requestAnimationFrame(animate);
-      renderer.render(scene, camera);
-    };
-    animate();
-
-    // Cleanup
-    return () => {
-      if (renderer.domElement && containerRef.current) {
-        containerRef.current.removeChild(renderer.domElement);
-      }
-      renderer.dispose();
-    };
-  }, []);
-
-  // Update cabinet when dimensions change
-  useEffect(() => {
-    if (!sceneRef.current) return;
-
-    // Remove old cabinet
-    if (cabinetMeshRef.current) {
-      sceneRef.current.remove(cabinetMeshRef.current);
-    }
-
-    // Create new cabinet group
-    const cabinetGroup = new THREE.Group();
-    cabinetMeshRef.current = cabinetGroup;
-
-    // Determine material color based on material type
-    const materialColor = getMaterialColor(material?.type);
-    const thickness = material?.thickness || 0.75;
-
-    // Create cabinet box
-    const cabinetGeometry = new THREE.BoxGeometry(
-      cabinet.width / 12, // Convert inches to feet for Three.js
-      cabinet.height / 12,
-      cabinet.depth / 12
-    );
-    const cabinetMaterial = new THREE.MeshStandardMaterial({
-      color: materialColor,
-      roughness: 0.7,
-      metalness: 0.1
-    });
-    const cabinetMesh = new THREE.Mesh(cabinetGeometry, cabinetMaterial);
-    cabinetMesh.castShadow = true;
-    cabinetMesh.receiveShadow = true;
-    cabinetMesh.position.y = cabinet.height / 24; // Position at half height
-    cabinetGroup.add(cabinetMesh);
-
-    // Add edge details (frame)
-    addEdgeDetails(cabinetGroup, cabinet, thickness, materialColor);
-
-    // Add door/drawer fronts
-    addCabinetDetails(cabinetGroup, cabinet, thickness, materialColor);
-
-    sceneRef.current.add(cabinetGroup);
-  }, [cabinet, material]);
-
-  // Handle window resize
-  useEffect(() => {
-    const handleResize = () => {
-      if (!containerRef.current || !cameraRef.current || !rendererRef.current) return;
-      
-      const width = containerRef.current.clientWidth;
-      const height = containerRef.current.clientHeight;
-      
-      cameraRef.current.aspect = width / height;
-      cameraRef.current.updateProjectionMatrix();
-      rendererRef.current.setSize(width, height);
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  // Convert inches → feet for Three.js world units
+  const w = cabinet.width  / 12;
+  const h = cabinet.height / 12;
+  const d = cabinet.depth  / 12;
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%', background: 'var(--k-canvas-bg)', overflow: 'hidden' }}>
-      <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
-      
-      {/* Overlay info */}
-      <div className="absolute bottom-4 left-4 bg-slate-800/90 backdrop-blur-sm p-3 rounded-lg border border-slate-700">
-        <h3 className="font-semibold text-white mb-1">{cabinet.name}</h3>
-        <p className="text-sm text-slate-300">
-          {cabinet.width}"W × {cabinet.height}"H × {cabinet.depth}"D
-        </p>
-        {material && (
-          <p className="text-sm text-slate-400 mt-1">
-            {material.name} ({material.thickness}" thick)
-          </p>
-        )}
-      </div>
+    <group position={[0, h / 2, 0]}>
+      {/* Cabinet box (hollow shell via 5 panels) */}
 
-      {/* Rotation hint */}
-      <div className="absolute top-4 right-4 bg-slate-800/90 backdrop-blur-sm px-3 py-1 rounded-full border border-slate-700">
-        <p className="text-xs text-slate-300">Drag to rotate</p>
+      {/* Bottom */}
+      <mesh position={[0, -h / 2 + thickness / 2, 0]} castShadow receiveShadow>
+        <boxGeometry args={[w, thickness, d]} />
+        <meshStandardMaterial color={color} roughness={0.7} metalness={0.05} />
+      </mesh>
+
+      {/* Top */}
+      <mesh position={[0, h / 2 - thickness / 2, 0]} castShadow receiveShadow>
+        <boxGeometry args={[w, thickness, d]} />
+        <meshStandardMaterial color={color} roughness={0.7} metalness={0.05} />
+      </mesh>
+
+      {/* Left side */}
+      <mesh position={[-w / 2 + thickness / 2, 0, 0]} castShadow receiveShadow>
+        <boxGeometry args={[thickness, h, d]} />
+        <meshStandardMaterial color={color} roughness={0.7} metalness={0.05} />
+      </mesh>
+
+      {/* Right side */}
+      <mesh position={[w / 2 - thickness / 2, 0, 0]} castShadow receiveShadow>
+        <boxGeometry args={[thickness, h, d]} />
+        <meshStandardMaterial color={color} roughness={0.7} metalness={0.05} />
+      </mesh>
+
+      {/* Back */}
+      <mesh position={[0, 0, -d / 2 + thickness / 2]} castShadow receiveShadow>
+        <boxGeometry args={[w, h, thickness]} />
+        <meshStandardMaterial color={color} roughness={0.8} metalness={0.02} />
+      </mesh>
+
+      {/* Door front */}
+      <mesh position={[0, 0, d / 2 - thickness / 2]} castShadow receiveShadow>
+        <boxGeometry args={[w - thickness * 2 - 0.02, h - thickness * 2 - 0.02, thickness]} />
+        <meshStandardMaterial color={color} roughness={0.65} metalness={0.08} />
+      </mesh>
+
+      {/* Door handle */}
+      <mesh
+        position={[w / 2 - thickness * 3, 0, d / 2 + thickness * 0.5]}
+        castShadow
+      >
+        <boxGeometry args={[0.025, 0.18, 0.025]} />
+        <meshStandardMaterial color={0x888888} roughness={0.25} metalness={0.85} />
+      </mesh>
+    </group>
+  );
+}
+
+// ─── Scene ───────────────────────────────────────────────────────────────────
+
+function Scene({ cabinet, material }: CabinetPreviewProps) {
+  return (
+    <>
+      <Environment preset="studio" />
+
+      <ambientLight intensity={0.4} />
+      <directionalLight
+        position={[5, 10, 7]}
+        intensity={1.2}
+        castShadow
+        shadow-mapSize={[1024, 1024]}
+      />
+
+      <CabinetMesh cabinet={cabinet} material={material} />
+
+      <Grid
+        position={[0, 0, 0]}
+        args={[20, 20]}
+        cellSize={0.5}
+        cellThickness={0.4}
+        cellColor="#3a2a1a"
+        sectionSize={2}
+        sectionThickness={0.8}
+        sectionColor="#c45d2c22"
+        fadeDistance={18}
+        fadeStrength={1.2}
+        infiniteGrid
+      />
+
+      <OrbitControls
+        makeDefault
+        enableDamping
+        dampingFactor={0.08}
+        minDistance={1}
+        maxDistance={20}
+        maxPolarAngle={Math.PI / 2.05}
+      />
+
+      <GizmoHelper alignment="bottom-right" margin={[60, 60]}>
+        <GizmoViewport
+          axisColors={["#c45d2c", "#e8c99a", "#888"]}
+          labelColor="#f5f0eb"
+        />
+      </GizmoHelper>
+    </>
+  );
+}
+
+// ─── Export ──────────────────────────────────────────────────────────────────
+
+export default function CabinetPreview({ cabinet, material }: CabinetPreviewProps) {
+  const h = cabinet.height / 12;
+
+  return (
+    <div style={{ width: "100%", height: "100%", background: "var(--k-canvas-bg)" }}>
+      <Canvas
+        shadows
+        camera={{
+          position: [h * 1.6, h * 1.2, h * 2.2],
+          fov: 42,
+          near: 0.01,
+          far: 100,
+        }}
+        gl={{ antialias: true }}
+      >
+        <Scene cabinet={cabinet} material={material} />
+      </Canvas>
+
+      {/* Dimension overlay */}
+      <div style={{
+        position: "absolute",
+        bottom: "16px",
+        left: "16px",
+        background: "rgba(26,18,11,0.85)",
+        backdropFilter: "blur(8px)",
+        border: "1px solid var(--k-canvas-border)",
+        padding: "8px 12px",
+        borderRadius: "3px",
+        pointerEvents: "none",
+      }}>
+        <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--k-canvas-text)", marginBottom: "2px" }}>
+          {cabinet.name}
+        </div>
+        <div style={{ fontSize: "11px", color: "var(--k-canvas-text-muted)", fontVariantNumeric: "tabular-nums" }}>
+          {cabinet.width}" W × {cabinet.height}" H × {cabinet.depth}" D
+        </div>
       </div>
     </div>
   );
 }
 
-function getMaterialColor(materialType?: string): number {
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function getMaterialColor(materialType?: string): THREE.ColorRepresentation {
   switch (materialType) {
-    case "plywood":
-      return 0xd4a373; // Light oak
-    case "mdf":
-      return 0x8b7355; // Medium brown
-    case "hardwood":
-      return 0xc4a484; // Dark oak
-    default:
-      return 0xd4a373;
+    case "plywood":  return "#c9956a";
+    case "mdf":      return "#9b836b";
+    case "hardwood": return "#b8864e";
+    default:         return "#c9956a";
   }
-}
-
-function addEdgeDetails(
-  group: THREE.Group,
-  cabinet: Cabinet,
-  thickness: number,
-  color: number
-) {
-  const edgeMaterial = new THREE.MeshStandardMaterial({
-    color: color,
-    roughness: 0.8,
-    metalness: 0.05
-  });
-
-  // Frame edges (top and bottom)
-  const edgeHeight = 0.05;
-  const edgeGeometry = new THREE.BoxGeometry(
-    cabinet.width / 12,
-    edgeHeight,
-    cabinet.depth / 12
-  );
-
-  const topEdge = new THREE.Mesh(edgeGeometry, edgeMaterial);
-  topEdge.position.y = cabinet.height / 12;
-  topEdge.castShadow = true;
-  group.add(topEdge);
-
-  const bottomEdge = new THREE.Mesh(edgeGeometry, edgeMaterial);
-  bottomEdge.position.y = 0;
-  bottomEdge.castShadow = true;
-  group.add(bottomEdge);
-}
-
-function addCabinetDetails(
-  group: THREE.Group,
-  cabinet: Cabinet,
-  thickness: number,
-  color: number
-) {
-  const doorMaterial = new THREE.MeshStandardMaterial({
-    color: color,
-    roughness: 0.75,
-    metalness: 0.08
-  });
-
-  // Simple door representation
-  const doorGeometry = new THREE.BoxGeometry(
-    (cabinet.width / 12) - 0.1,
-    (cabinet.height / 12) - 0.1,
-    thickness / 12
-  );
-  const door = new THREE.Mesh(doorGeometry, doorMaterial);
-  door.position.set(0, cabinet.height / 24, (cabinet.depth / 24));
-  door.castShadow = true;
-  door.receiveShadow = true;
-  group.add(door);
-
-  // Door handle
-  const handleGeometry = new THREE.BoxGeometry(0.05, 0.2, 0.02);
-  const handleMaterial = new THREE.MeshStandardMaterial({
-    color: 0x888888,
-    roughness: 0.3,
-    metalness: 0.8
-  });
-  const handle = new THREE.Mesh(handleGeometry, handleMaterial);
-  handle.position.set(
-    (cabinet.width / 12) / 2 - 0.15,
-    cabinet.height / 24,
-    (cabinet.depth / 24) + 0.01
-  );
-  group.add(handle);
 }
