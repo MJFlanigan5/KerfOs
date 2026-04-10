@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef } from "react";
-import { Canvas } from "@react-three/fiber";
+import { useRef, useEffect } from "react";
+import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, Grid, Environment, GizmoHelper, GizmoViewport } from "@react-three/drei";
 import * as THREE from "three";
 import { Cabinet, Material, CanvasComponent } from "./CabinetBuilder";
@@ -15,13 +15,31 @@ interface CabinetPreviewProps {
   onSelect: (id: string | null) => void;
   onMove: (id: string, pos: [number, number, number]) => void;
   autoRotate?: boolean;
+  viewPreset?: 'perspective' | 'front' | 'top' | 'side';
 }
 
 // ─── Scene ───────────────────────────────────────────────────────────────────
 
-function Scene({ cabinet, material, components, selectedId, onSelect, onMove, autoRotate }: CabinetPreviewProps) {
+function Scene({ cabinet, material, components, selectedId, onSelect, onMove, autoRotate, viewPreset = 'perspective' }: CabinetPreviewProps) {
   const orbitRef = useRef<any>(null);
   const color = getMaterialColor(material?.type);
+  const { camera } = useThree();
+
+  // Camera preset switching
+  useEffect(() => {
+    const h = cabinet.height / 12;
+    switch (viewPreset) {
+      case 'front': camera.position.set(0, h * 0.7, h * 3.8); break;
+      case 'top':   camera.position.set(0, h * 5.5, 0.001);   break;
+      case 'side':  camera.position.set(h * 3.8, h * 0.7, 0); break;
+      default:      camera.position.set(h * 1.6, h * 1.2, h * 2.2);
+    }
+    if (orbitRef.current) {
+      orbitRef.current.target.set(0, h * 0.5, 0);
+      orbitRef.current.update();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewPreset]);
 
   return (
     <>
@@ -92,7 +110,7 @@ function Scene({ cabinet, material, components, selectedId, onSelect, onMove, au
 // ─── Export ──────────────────────────────────────────────────────────────────
 
 export default function CabinetPreview(props: CabinetPreviewProps) {
-  const { cabinet, autoRotate } = props;
+  const { cabinet } = props;
   const h = cabinet.height / 12;
 
   return (

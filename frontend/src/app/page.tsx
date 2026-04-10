@@ -37,82 +37,138 @@ function ScrollBar() {
 }
 
 
-/* ─── Feature card for bento grid ────────────────────────────────────────── */
-function FeatureCard({
-  title, body, tag, accent = false, large = false, mono,
-}: {
-  title: string
-  body: string
-  tag: string
-  accent?: boolean
-  large?: boolean
-  mono?: string
-}) {
+/* ─── Feature row visual: Blueprint ──────────────────────────────────────── */
+function BlueprintVisual() {
   return (
-    <div
-      className="k-card"
-      style={{
-        padding: '28px',
-        gridColumn: large ? 'span 2' : 'span 1',
-        background: accent ? 'var(--k-ink)' : 'var(--k-surface)',
-        color: accent ? 'var(--k-bg)' : 'var(--k-ink)',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        gap: '20px',
-        minHeight: '200px',
-      }}
-    >
-      <div>
-        <span
-          className="k-label"
-          style={{
-            color: accent ? 'rgba(248,247,244,0.5)' : undefined,
-            marginBottom: '10px',
-            display: 'block',
-          }}
-        >
-          {tag}
-        </span>
-        <h3
-          style={{
-            fontFamily: 'var(--font-sora), Sora, sans-serif',
-            fontSize: '20px',
-            fontWeight: 600,
-            letterSpacing: '-0.025em',
-            lineHeight: 1.2,
-            color: accent ? 'var(--k-bg)' : 'var(--k-ink)',
-          }}
-        >
-          {title}
-        </h3>
-        <p
-          style={{
-            marginTop: '8px',
-            fontSize: '14px',
-            lineHeight: 1.65,
-            color: accent ? 'rgba(248,247,244,0.65)' : 'var(--k-ink-3)',
-          }}
-        >
-          {body}
-        </p>
+    <div style={{ background: '#0a0e1c', borderRadius: '6px', overflow: 'hidden', position: 'relative', aspectRatio: '5/4', border: '1px solid rgba(196,93,44,0.14)' }}>
+      <svg width="100%" height="100%" viewBox="0 0 400 320" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
+        <defs>
+          <pattern id="bp-grid" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+            <path d="M20 0L0 0 0 20" fill="none" stroke="rgba(196,93,44,0.07)" strokeWidth="0.5"/>
+          </pattern>
+        </defs>
+        <rect width="400" height="320" fill="url(#bp-grid)"/>
+        {/* Cabinet face frame */}
+        <rect x="90" y="32" width="220" height="240" stroke="#c45d2c" strokeWidth="1.5" fill="rgba(196,93,44,0.04)" rx="1"/>
+        {/* Framing members */}
+        <rect x="90" y="32" width="220" height="18" fill="rgba(196,93,44,0.10)" stroke="#c45d2c" strokeWidth="1"/>
+        <rect x="90" y="254" width="220" height="18" fill="rgba(196,93,44,0.10)" stroke="#c45d2c" strokeWidth="1"/>
+        <rect x="90" y="50" width="16" height="204" fill="rgba(196,93,44,0.07)" stroke="#c45d2c" strokeWidth="1"/>
+        <rect x="294" y="50" width="16" height="204" fill="rgba(196,93,44,0.07)" stroke="#c45d2c" strokeWidth="1"/>
+        {/* Center stile */}
+        <line x1="200" y1="50" x2="200" y2="254" stroke="#c45d2c" strokeWidth="1.5"/>
+        {/* Door openings (dashed) */}
+        <rect x="108" y="52" width="89" height="200" stroke="rgba(232,201,154,0.35)" strokeWidth="1" strokeDasharray="5 3" fill="none"/>
+        <rect x="203" y="52" width="89" height="200" stroke="rgba(232,201,154,0.35)" strokeWidth="1" strokeDasharray="5 3" fill="none"/>
+        {/* Width dim */}
+        <line x1="90" y1="294" x2="310" y2="294" stroke="rgba(232,201,154,0.55)" strokeWidth="0.8"/>
+        <line x1="90" y1="289" x2="90" y2="299" stroke="rgba(232,201,154,0.55)" strokeWidth="0.8"/>
+        <line x1="310" y1="289" x2="310" y2="299" stroke="rgba(232,201,154,0.55)" strokeWidth="0.8"/>
+        <text x="200" y="292" fill="#e8c99a" fontSize="9" textAnchor="middle" fontFamily="monospace" opacity="0.8">24.00"</text>
+        {/* Height dim */}
+        <line x1="56" y1="32" x2="56" y2="272" stroke="rgba(232,201,154,0.55)" strokeWidth="0.8"/>
+        <line x1="51" y1="32" x2="61" y2="32" stroke="rgba(232,201,154,0.55)" strokeWidth="0.8"/>
+        <line x1="51" y1="272" x2="61" y2="272" stroke="rgba(232,201,154,0.55)" strokeWidth="0.8"/>
+        <text x="38" y="156" fill="#e8c99a" fontSize="9" textAnchor="middle" fontFamily="monospace" opacity="0.8" transform="rotate(-90 38 156)">34.50"</text>
+        {/* Part labels */}
+        <text x="96" y="46" fill="rgba(232,201,154,0.45)" fontSize="7" fontFamily="monospace">TOP RAIL</text>
+        <text x="96" y="78" fill="rgba(232,201,154,0.45)" fontSize="7" fontFamily="monospace">L STILE</text>
+        <text x="153" y="156" fill="rgba(232,201,154,0.5)" fontSize="8" fontFamily="monospace" textAnchor="middle">DOOR L</text>
+        <text x="247" y="156" fill="rgba(232,201,154,0.5)" fontSize="8" fontFamily="monospace" textAnchor="middle">DOOR R</text>
+        {/* Depth annotation */}
+        <line x1="310" y1="50" x2="348" y2="22" stroke="rgba(196,93,44,0.4)" strokeWidth="0.8" strokeDasharray="3 2"/>
+        <text x="352" y="20" fill="rgba(232,201,154,0.55)" fontSize="8" fontFamily="monospace">23.75"D</text>
+      </svg>
+      <div style={{ position: 'absolute', top: '12px', left: '12px', padding: '4px 10px', background: 'rgba(10,14,28,0.8)', border: '1px solid rgba(196,93,44,0.2)', borderRadius: '2px' }}>
+        <span style={{ fontFamily: 'monospace', fontSize: '9px', color: 'rgba(232,201,154,0.7)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Face Frame — Front View</span>
       </div>
-      {mono && (
-        <div
-          className="k-mono"
-          style={{
-            padding: '10px 14px',
-            background: accent ? 'rgba(255,255,255,0.06)' : 'var(--k-bg-subtle)',
-            borderRadius: 'var(--k-r-sm)',
-            fontSize: '12px',
-            color: accent ? 'rgba(255,255,255,0.7)' : 'var(--k-ink-3)',
-            border: accent ? '1px solid rgba(255,255,255,0.08)' : '1px solid var(--k-border)',
-            whiteSpace: 'pre-line',
-          }}
-        >
-          {mono}
-        </div>
-      )}
+    </div>
+  )
+}
+
+/* ─── Feature row visual: Nesting / board yield ───────────────────────────── */
+function NestingVisual() {
+  // Simulated nested rectangles on a 4×8 sheet
+  const pieces = [
+    { x: 8,   y: 8,   w: 140, h: 96,  label: 'Side L',   color: 'rgba(196,93,44,0.70)' },
+    { x: 156, y: 8,   w: 140, h: 96,  label: 'Side R',   color: 'rgba(196,93,44,0.60)' },
+    { x: 8,   y: 112, w: 288, h: 48,  label: 'Back',     color: 'rgba(196,93,44,0.45)' },
+    { x: 8,   y: 168, w: 136, h: 52,  label: 'Bottom',   color: 'rgba(196,93,44,0.55)' },
+    { x: 152, y: 168, w: 72,  h: 52,  label: 'Shelf',    color: 'rgba(196,93,44,0.40)' },
+    { x: 232, y: 168, w: 64,  h: 52,  label: 'Shelf',    color: 'rgba(196,93,44,0.35)' },
+    { x: 8,   y: 228, w: 86,  h: 60,  label: 'Door L',   color: 'rgba(196,93,44,0.50)' },
+    { x: 102, y: 228, w: 86,  h: 60,  label: 'Door R',   color: 'rgba(196,93,44,0.48)' },
+    { x: 196, y: 228, w: 100, h: 28,  label: 'Top Rail', color: 'rgba(196,93,44,0.38)' },
+    { x: 196, y: 260, w: 100, h: 28,  label: 'Btm Rail', color: 'rgba(196,93,44,0.35)' },
+  ]
+  return (
+    <div style={{ background: '#0d0906', borderRadius: '6px', overflow: 'hidden', position: 'relative', aspectRatio: '5/4', border: '1px solid rgba(196,93,44,0.14)' }}>
+      <svg width="100%" height="100%" viewBox="0 0 312 296" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block', padding: '8px' }}>
+        {/* Sheet outline */}
+        <rect x="4" y="4" width="304" height="288" stroke="rgba(196,93,44,0.35)" strokeWidth="1" fill="rgba(196,93,44,0.04)" rx="1"/>
+        {/* Sheet label */}
+        <text x="156" y="298" fill="rgba(196,93,44,0.4)" fontSize="8" fontFamily="monospace" textAnchor="middle">48.00" × 96.00" — 3/4" Plywood</text>
+        {/* Pieces */}
+        {pieces.map((p, i) => (
+          <g key={i}>
+            <rect x={p.x + 4} y={p.y + 4} width={p.w} height={p.h} fill={p.color} stroke="rgba(232,201,154,0.15)" strokeWidth="0.5" rx="0.5"/>
+            <text x={p.x + 4 + p.w / 2} y={p.y + 4 + p.h / 2 + 3} fill="rgba(232,201,154,0.75)" fontSize="7.5" textAnchor="middle" fontFamily="monospace">{p.label}</text>
+          </g>
+        ))}
+      </svg>
+      {/* Yield badge */}
+      <div style={{ position: 'absolute', top: '12px', right: '12px', padding: '6px 14px', background: 'rgba(10,14,28,0.9)', border: '1px solid rgba(6,182,212,0.3)', borderRadius: '3px', textAlign: 'center' }}>
+        <div style={{ fontFamily: 'var(--font-sora), Sora, sans-serif', fontSize: '20px', fontWeight: 700, color: '#06b6d4', letterSpacing: '-0.04em', lineHeight: 1 }}>93.7%</div>
+        <div style={{ fontFamily: 'monospace', fontSize: '8px', color: 'rgba(245,240,235,0.4)', marginTop: '2px', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Board yield</div>
+      </div>
+    </div>
+  )
+}
+
+/* ─── Feature row visual: G-code terminal ────────────────────────────────── */
+function GcodeVisual() {
+  const lines = [
+    { prefix: 'G0',  body: ' X0.000 Y0.000 Z5.000',    color: '#06b6d4' },
+    { prefix: 'G1',  body: ' Z-0.750 F100',             color: '#06b6d4' },
+    { prefix: 'G1',  body: ' X24.000 F300',             color: '#e8c99a' },
+    { prefix: 'G1',  body: ' Y34.500 F300',             color: '#e8c99a' },
+    { prefix: 'G1',  body: ' X0.000 F300',              color: '#e8c99a' },
+    { prefix: 'G1',  body: ' Y0.000 F300',              color: '#e8c99a' },
+    { prefix: 'G0',  body: ' Z5.000',                   color: '#06b6d4' },
+    { prefix: '; →', body: ' Cut: Bottom — pass 1/3',   color: 'rgba(245,240,235,0.28)' },
+    { prefix: 'G0',  body: ' X1.875 Y1.875 Z5.000',    color: '#06b6d4' },
+    { prefix: 'G1',  body: ' Z-0.750 F100',             color: '#06b6d4' },
+    { prefix: 'G1',  body: ' X22.125 F300',             color: '#e8c99a' },
+    { prefix: 'G1',  body: ' Y32.625 F300',             color: '#e8c99a' },
+  ]
+  const formats = ['GRBL', 'SBP', 'FANUC', 'Mach3', 'LinuxCNC']
+  return (
+    <div style={{ background: '#090c1a', borderRadius: '6px', overflow: 'hidden', border: '1px solid rgba(6,182,212,0.12)', fontFamily: 'var(--font-mono), JetBrains Mono, monospace' }}>
+      {/* Terminal title bar */}
+      <div style={{ padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        {['#e25f5f','#f3c343','#4ec94e'].map((c, i) => (
+          <span key={i} style={{ width: 9, height: 9, borderRadius: '50%', background: c, opacity: 0.7, flexShrink: 0 }} />
+        ))}
+        <span style={{ fontSize: '10px', color: 'rgba(245,240,235,0.3)', letterSpacing: '0.04em', marginLeft: '6px' }}>kitchen-base-cabinet.nc</span>
+      </div>
+      {/* Code lines */}
+      <div style={{ padding: '16px 18px', fontSize: '11px', lineHeight: 1.85 }}>
+        {lines.map((l, i) => (
+          <div key={i} style={{ display: 'flex', gap: '4px' }}>
+            <span style={{ color: 'rgba(245,240,235,0.2)', userSelect: 'none', minWidth: '22px', textAlign: 'right', flexShrink: 0 }}>{i + 1}</span>
+            <span style={{ marginLeft: '10px', color: l.color, opacity: l.prefix.startsWith(';') ? 1 : 0.95 }}>
+              <span style={{ color: l.prefix.startsWith(';') ? 'rgba(245,240,235,0.28)' : '#c084fc' }}>{l.prefix}</span>
+              {l.body}
+            </span>
+          </div>
+        ))}
+      </div>
+      {/* Format chips */}
+      <div style={{ padding: '10px 18px 14px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+        {formats.map(f => (
+          <span key={f} style={{ padding: '2px 8px', borderRadius: '2px', fontSize: '10px', fontWeight: 600, letterSpacing: '0.04em', background: 'rgba(6,182,212,0.10)', color: '#06b6d4', border: '1px solid rgba(6,182,212,0.18)' }}>{f}</span>
+        ))}
+      </div>
     </div>
   )
 }
@@ -413,59 +469,89 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── BENTO FEATURE GRID ───────────────────────────────────────── */}
-      <section style={{ padding: '40px 40px 80px', maxWidth: '1280px', margin: '0 auto' }}>
-        <div style={{ maxWidth: '560px', marginBottom: '48px' }}>
-          <p className="k-label" style={{ marginBottom: '12px' }}>Everything you need</p>
-          <h2 className="k-heading-lg">
-            Professional-grade tools.{' '}
-            <span style={{ color: 'var(--k-ink-3)', fontWeight: 400 }}>Without the enterprise price.</span>
-          </h2>
+      {/* ── FEATURE ROWS ─────────────────────────────────────────────── */}
+      <section style={{ padding: '96px 0' }}>
+
+        {/* Feature 1: Cabinet Builder */}
+        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 40px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '80px', alignItems: 'center', marginBottom: '112px' }}>
+          <div>
+            <p className="k-label" style={{ marginBottom: '14px' }}>Design</p>
+            <h2 style={{ fontFamily: 'var(--font-sora), Sora, sans-serif', fontSize: 'clamp(24px, 2.8vw, 36px)', fontWeight: 700, letterSpacing: '-0.03em', lineHeight: 1.12, color: 'var(--k-ink)', marginBottom: '20px' }}>
+              Parametric cabinet design that thinks in inches
+            </h2>
+            <p style={{ fontSize: '16px', lineHeight: 1.75, color: 'var(--k-ink-3)', marginBottom: '32px', maxWidth: '420px' }}>
+              Define dimensions once — KerfOS generates every part, every joint, and every cut automatically. Framed or frameless, inset or overlay.
+            </p>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              {['Part list generated from your dimensions', 'Framed & frameless construction modes', 'Hardware hole patterns included', 'Build modular runs of any width'].map(item => (
+                <li key={item} style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '12px', fontSize: '14px', color: 'var(--k-ink-2)' }}>
+                  <span style={{ width: 18, height: 18, borderRadius: '50%', background: 'var(--k-amber-soft)', border: '1px solid rgba(6,182,212,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5L3.8 6.8L7.5 2" stroke="var(--k-amber-dark)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <Link href="/design/builder" className="k-btn k-btn-primary" style={{ marginTop: '28px' }}>
+              Try the builder →
+            </Link>
+          </div>
+          <BlueprintVisual />
         </div>
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '16px',
-          }}
-          className="bento-grid"
-        >
-          <FeatureCard
-            tag="Design"
-            title="Parametric Cabinet Builder"
-            body="Define your dimensions once. KerfOS generates every part, every joint, and every cut — automatically. Framed or frameless, inset or overlay."
-            large
-          />
-          <FeatureCard
-            tag="Optimize"
-            title="94%+ Board Yield"
-            body="Advanced nesting cuts waste before you run a single line. See exactly what sheets you need before touching your material."
-            mono={`G0 X0 Y0 Z5.0000\nG1 X24.000 F300\nG1 Y34.500 F300`}
-            accent
-          />
-          <FeatureCard
-            tag="Export"
-            title="G-Code for Every Machine"
-            body="Shapeoko, X-Carve, ShopBot, GRBL — pick your post-processor and export in seconds."
-          />
-          <FeatureCard
-            tag="Materials"
-            title="Live Hardware Pricing"
-            body="Know your project cost before you order. Live pricing from major suppliers, auto-updated."
-          />
-          <FeatureCard
-            tag="Tools"
-            title="Design Doctor"
-            body="Run a pre-flight check on any design. KerfOS flags clearance issues, unsupported spans, and hardware conflicts before they become expensive mistakes."
-            large
-          />
-          <FeatureCard
-            tag="Community"
-            title="Gallery &amp; Templates"
-            body="Pull in a proven template or share your finished kitchen with the community."
-          />
+        {/* Feature 2: Board Yield — reversed */}
+        <div style={{ background: 'var(--k-surface)', borderTop: '1px solid var(--k-border)', borderBottom: '1px solid var(--k-border)', padding: '96px 40px', marginBottom: '0' }}>
+          <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '80px', alignItems: 'center' }}>
+            <NestingVisual />
+            <div>
+              <p className="k-label" style={{ marginBottom: '14px' }}>Optimize</p>
+              <h2 style={{ fontFamily: 'var(--font-sora), Sora, sans-serif', fontSize: 'clamp(24px, 2.8vw, 36px)', fontWeight: 700, letterSpacing: '-0.03em', lineHeight: 1.12, color: 'var(--k-ink)', marginBottom: '20px' }}>
+                Waste less. Know your yield before the first cut.
+              </h2>
+              <p style={{ fontSize: '16px', lineHeight: 1.75, color: 'var(--k-ink-3)', marginBottom: '32px', maxWidth: '420px' }}>
+                Advanced non-guillotine nesting fits your parts into fewer sheets. See exactly what you need to buy before you touch your material.
+              </p>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                {['93%+ average board yield', 'Grain-direction aware packing', 'Scrap tracking and re-use', 'Multi-sheet projects with one click'].map(item => (
+                  <li key={item} style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '12px', fontSize: '14px', color: 'var(--k-ink-2)' }}>
+                    <span style={{ width: 18, height: 18, borderRadius: '50%', background: 'var(--k-amber-soft)', border: '1px solid rgba(6,182,212,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5L3.8 6.8L7.5 2" stroke="var(--k-amber-dark)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/optimize" className="k-btn k-btn-primary" style={{ marginTop: '28px' }}>
+                See optimizer →
+              </Link>
+            </div>
+          </div>
         </div>
+
+        {/* Feature 3: G-Code Export */}
+        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '96px 40px 0', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '80px', alignItems: 'center' }}>
+          <div>
+            <p className="k-label" style={{ marginBottom: '14px' }}>Export</p>
+            <h2 style={{ fontFamily: 'var(--font-sora), Sora, sans-serif', fontSize: 'clamp(24px, 2.8vw, 36px)', fontWeight: 700, letterSpacing: '-0.03em', lineHeight: 1.12, color: 'var(--k-ink)', marginBottom: '20px' }}>
+              G-Code for whatever's in the shop
+            </h2>
+            <p style={{ fontSize: '16px', lineHeight: 1.75, color: 'var(--k-ink-3)', marginBottom: '32px', maxWidth: '420px' }}>
+              Pick your post-processor and export in seconds. Shapeoko, X-Carve, ShopBot, Mach3 — if it speaks G-code, KerfOS speaks back.
+            </p>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              {['GRBL, SBP, FANUC, Mach3, LinuxCNC', 'Tool change and depth pass support', 'DXF, OBJ, STL 3D exports', 'One-click cut list PDF'].map(item => (
+                <li key={item} style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '12px', fontSize: '14px', color: 'var(--k-ink-2)' }}>
+                  <span style={{ width: 18, height: 18, borderRadius: '50%', background: 'var(--k-amber-soft)', border: '1px solid rgba(6,182,212,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5L3.8 6.8L7.5 2" stroke="var(--k-amber-dark)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <GcodeVisual />
+        </div>
+
       </section>
 
       {/* ── VS MICROVELLUM ───────────────────────────────────────────── */}
@@ -476,7 +562,7 @@ export default function HomePage() {
             The honest comparison
           </h2>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '32px', alignItems: 'start' }} className="compare-grid">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '32px', alignItems: 'stretch' }} className="compare-grid">
             {/* KerfOS column */}
             <div>
               <div style={{ fontFamily: 'var(--font-sora), Sora, sans-serif', fontWeight: 700, fontSize: '20px', letterSpacing: '-0.03em', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -503,8 +589,8 @@ export default function HomePage() {
             </div>
 
             {/* Divider */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '52px' }}>
-              <div style={{ width: '1px', height: '280px', background: 'var(--k-border-mid)' }} />
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div style={{ width: '1px', flex: 1, background: 'var(--k-border-mid)' }} />
             </div>
 
             {/* Microvellum column */}
