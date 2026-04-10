@@ -21,7 +21,7 @@ export default function CabinetPreview({ cabinet, material }: CabinetPreviewProp
 
     // Scene setup
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x1a1a2e);
+    scene.background = new THREE.Color(0x0f0a07);
     sceneRef.current = scene;
 
     // Camera setup
@@ -149,8 +149,8 @@ export default function CabinetPreview({ cabinet, material }: CabinetPreviewProp
   }, []);
 
   return (
-    <div className="relative h-96 bg-slate-900 rounded-lg overflow-hidden">
-      <div ref={containerRef} className="w-full h-full" />
+    <div style={{ position: 'relative', width: '100%', height: '100%', background: 'var(--k-canvas-bg)', overflow: 'hidden' }}>
+      <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
       
       {/* Overlay info */}
       <div className="absolute bottom-4 left-4 bg-slate-800/90 backdrop-blur-sm p-3 rounded-lg border border-slate-700">

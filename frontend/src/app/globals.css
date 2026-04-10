@@ -64,6 +64,18 @@
   --k-text-4xl:  58px;
   --k-text-5xl:  72px;
 
+  /* Canvas workspace (dark) */
+  --k-canvas-bg:      #0F0A07;
+  --k-canvas-surface: #1A120B;
+  --k-canvas-surface-2: #241910;
+  --k-canvas-border:  rgba(196, 93, 44, 0.15);
+  --k-canvas-text:    #F5F0EB;
+  --k-canvas-text-muted: rgba(245, 240, 235, 0.55);
+  --k-canvas-accent:  #C45D2C;
+  --k-canvas-accent-dim: rgba(196, 93, 44, 0.12);
+  --k-canvas-measure: #E8C99A;
+  --k-canvas-grid:    rgba(196, 93, 44, 0.08);
+
   /* Transitions */
   --k-ease:       cubic-bezier(0.22, 1, 0.36, 1);
   --k-ease-out:   cubic-bezier(0.16, 1, 0.3, 1);

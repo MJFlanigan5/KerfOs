@@ -1,7 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Ruler, Box, Scissors, DollarSign } from 'lucide-react'
+import dynamic from 'next/dynamic'
+
+const CabinetPreview = dynamic(() => import('./CabinetPreview'), { ssr: false })
 
 export interface Material {
   id: number | string
@@ -35,6 +37,216 @@ export interface Cabinet {
   components?: CabinetComponent[]
 }
 
+const PALETTE_ITEMS = [
+  { id: 'box',      label: 'Box' },
+  { id: 'door',     label: 'Door' },
+  { id: 'drawer',   label: 'Drawer' },
+  { id: 'shelf',    label: 'Shelf' },
+  { id: 'divider',  label: 'Divider' },
+  { id: 'toe-kick', label: 'Toe Kick' },
+]
+
+const MATERIALS = [
+  { id: 1, name: 'Birch Plywood',  price: 65.99, type: 'plywood',  thickness: 0.75 },
+  { id: 2, name: 'MDF',            price: 42.50, type: 'mdf',      thickness: 0.75 },
+  { id: 3, name: 'Oak Hardwood',   price: 89.99, type: 'hardwood', thickness: 0.75 },
+]
+
+const s = {
+  // Workspace shell
+  shell: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    height: 'calc(100vh - 64px)',
+    background: 'var(--k-canvas-bg)',
+    color: 'var(--k-canvas-text)',
+    fontFamily: 'var(--font-inter), system-ui, sans-serif',
+  },
+  // Top toolbar
+  toolbar: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '0 16px',
+    height: '44px',
+    borderBottom: '1px solid var(--k-canvas-border)',
+    background: 'var(--k-canvas-surface)',
+    flexShrink: 0,
+  },
+  toolbarTitle: {
+    fontFamily: 'var(--font-sora), Sora, sans-serif',
+    fontSize: '13px',
+    fontWeight: 600,
+    letterSpacing: '-0.01em',
+    color: 'var(--k-canvas-text)',
+  },
+  toolbarActions: {
+    display: 'flex',
+    gap: '6px',
+  },
+  tbBtn: {
+    padding: '4px 12px',
+    fontSize: '11px',
+    fontWeight: 500,
+    letterSpacing: '0.01em',
+    border: '1px solid var(--k-canvas-border)',
+    background: 'transparent',
+    color: 'var(--k-canvas-text-muted)',
+    cursor: 'pointer',
+    borderRadius: '3px',
+  },
+  tbBtnPrimary: {
+    padding: '4px 12px',
+    fontSize: '11px',
+    fontWeight: 600,
+    letterSpacing: '0.01em',
+    border: '1px solid var(--k-canvas-accent)',
+    background: 'var(--k-canvas-accent)',
+    color: '#fff',
+    cursor: 'pointer',
+    borderRadius: '3px',
+  },
+  // Middle row
+  middle: {
+    display: 'flex',
+    flex: 1,
+    overflow: 'hidden',
+  },
+  // Left palette
+  palette: {
+    width: '200px',
+    flexShrink: 0,
+    borderRight: '1px solid var(--k-canvas-border)',
+    background: 'var(--k-canvas-surface)',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    overflow: 'hidden',
+  },
+  paletteHeader: {
+    padding: '10px 14px',
+    fontSize: '10px',
+    fontWeight: 600,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase' as const,
+    color: 'var(--k-canvas-text-muted)',
+    borderBottom: '1px solid var(--k-canvas-border)',
+  },
+  paletteItem: {
+    padding: '9px 14px',
+    fontSize: '13px',
+    color: 'var(--k-canvas-text)',
+    cursor: 'pointer',
+    borderBottom: '1px solid var(--k-canvas-border)',
+    userSelect: 'none' as const,
+  },
+  // Center canvas
+  canvas: {
+    flex: 1,
+    overflow: 'hidden',
+    position: 'relative' as const,
+  },
+  // Right panel
+  panel: {
+    width: '260px',
+    flexShrink: 0,
+    borderLeft: '1px solid var(--k-canvas-border)',
+    background: 'var(--k-canvas-surface)',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    overflow: 'hidden',
+  },
+  panelHeader: {
+    padding: '10px 14px',
+    fontSize: '10px',
+    fontWeight: 600,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase' as const,
+    color: 'var(--k-canvas-text-muted)',
+    borderBottom: '1px solid var(--k-canvas-border)',
+  },
+  panelBody: {
+    flex: 1,
+    overflowY: 'auto' as const,
+    padding: '14px',
+  },
+  fieldLabel: {
+    fontSize: '11px',
+    fontWeight: 500,
+    color: 'var(--k-canvas-text-muted)',
+    marginBottom: '5px',
+    display: 'block',
+  },
+  input: {
+    width: '100%',
+    padding: '6px 8px',
+    fontSize: '13px',
+    background: 'var(--k-canvas-bg)',
+    border: '1px solid var(--k-canvas-border)',
+    color: 'var(--k-canvas-text)',
+    borderRadius: '3px',
+    outline: 'none',
+    marginBottom: '12px',
+  },
+  select: {
+    width: '100%',
+    padding: '6px 8px',
+    fontSize: '13px',
+    background: 'var(--k-canvas-bg)',
+    border: '1px solid var(--k-canvas-border)',
+    color: 'var(--k-canvas-text)',
+    borderRadius: '3px',
+    outline: 'none',
+    marginBottom: '12px',
+  },
+  sectionDivider: {
+    height: '1px',
+    background: 'var(--k-canvas-border)',
+    margin: '12px 0',
+  },
+  sectionLabel: {
+    fontSize: '10px',
+    fontWeight: 600,
+    letterSpacing: '0.06em',
+    textTransform: 'uppercase' as const,
+    color: 'var(--k-canvas-text-muted)',
+    marginBottom: '10px',
+  },
+  // Bottom bar
+  bottomBar: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '24px',
+    padding: '0 20px',
+    height: '40px',
+    borderTop: '1px solid var(--k-canvas-border)',
+    background: 'var(--k-canvas-surface)',
+    flexShrink: 0,
+    fontSize: '12px',
+  },
+  bottomStat: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    color: 'var(--k-canvas-text-muted)',
+  },
+  bottomStatValue: {
+    color: 'var(--k-canvas-text)',
+    fontWeight: 500,
+    fontVariantNumeric: 'tabular-nums' as const,
+  },
+  exportBtn: {
+    marginLeft: 'auto',
+    padding: '4px 14px',
+    fontSize: '11px',
+    fontWeight: 600,
+    background: 'var(--k-canvas-accent)',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '3px',
+    cursor: 'pointer',
+  },
+}
+
 export function CabinetBuilder() {
   const [cabinet, setCabinet] = useState<Cabinet>({
     id: 1,
@@ -42,200 +254,157 @@ export function CabinetBuilder() {
     width: 36,
     height: 34.5,
     depth: 24,
-    material: 'Birch Plywood'
+    material: 'Birch Plywood',
   })
 
-  const [materials] = useState([
-    { id: 1, name: 'Birch Plywood', price: 65.99 },
-    { id: 2, name: 'MDF', price: 42.50 },
-    { id: 3, name: 'Oak Hardwood', price: 89.99 }
-  ])
+  const selectedMaterial = MATERIALS.find(m => m.name === cabinet.material) ?? MATERIALS[0]
 
-  const [cutList, setCutList] = useState<any[]>([])
-  const [price, setPrice] = useState<number>(0)
+  const cutList = [
+    { part: 'Bottom / Top', qty: 2, w: cabinet.width,         h: cabinet.depth },
+    { part: 'Sides',        qty: 2, w: cabinet.depth,         h: cabinet.height },
+    { part: 'Back',         qty: 1, w: cabinet.width,         h: cabinet.height },
+    { part: 'Shelves',      qty: 2, w: cabinet.width - 1.5,   h: cabinet.depth - 1.5 },
+  ]
 
-  const calculateCutList = () => {
-    // Simple cut list calculation
-    const cuts = [
-      { part: 'Bottom/Top', quantity: 2, width: cabinet.width, height: cabinet.depth },
-      { part: 'Sides', quantity: 2, width: cabinet.height, height: cabinet.depth },
-      { part: 'Back', quantity: 1, width: cabinet.width, height: cabinet.height },
-      { part: 'Shelves', quantity: 2, width: cabinet.width - 1.5, height: cabinet.depth - 1.5 }
-    ]
-    setCutList(cuts)
-  }
+  // Very rough cost estimate
+  const sqInTotal = cutList.reduce((sum, c) => sum + c.qty * c.w * c.h, 0)
+  const sqFt = sqInTotal / 144
+  const cost = (sqFt * (selectedMaterial.price / 32)) + 25 // hardware flat
 
-  const calculatePrice = () => {
-    const selectedMaterial = materials.find(m => m.name === cabinet.material)
-    if (!selectedMaterial) return
-
-    // Simple price calculation
-    const cabinetVolume = cabinet.width * cabinet.height * cabinet.depth
-    const sheetArea = 48 * 96 // Standard sheet size in square inches
-    const estimatedSheets = cabinetVolume / (sheetArea * 0.75)
-    const materialCost = estimatedSheets * selectedMaterial.price
-    const hardwareCost = 25.00
-    const totalCost = materialCost + hardwareCost
-
-    setPrice(totalCost)
-  }
-
-  const handleDimensionChange = (dimension: 'width' | 'height' | 'depth', value: number) => {
-    setCabinet(prev => ({
-      ...prev,
-      [dimension]: value
-    }))
-  }
-
-  const handleMaterialChange = (materialName: string) => {
-    setCabinet(prev => ({
-      ...prev,
-      material: materialName
-    }))
-  }
-
-  const handleCalculate = () => {
-    calculateCutList()
-    calculatePrice()
+  const handleDim = (dim: 'width' | 'height' | 'depth', val: string) => {
+    const n = parseFloat(val)
+    if (!isNaN(n) && n > 0) setCabinet(p => ({ ...p, [dim]: n }))
   }
 
   return (
-    <div className="space-y-6">
-      {/* Dimensions */}
-      <div className="space-y-4">
-        <div className="flex items-center space-x-2">
-          <Ruler className="w-5 h-5 text-gray-500" />
-          <h3 className="text-lg font-medium">Dimensions (inches)</h3>
-        </div>
-        
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Width</label>
-            <input
-              type="number"
-              value={cabinet.width}
-              onChange={(e) => handleDimensionChange('width', parseFloat(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Height</label>
-            <input
-              type="number"
-              value={cabinet.height}
-              onChange={(e) => handleDimensionChange('height', parseFloat(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Depth</label>
-            <input
-              type="number"
-              value={cabinet.depth}
-              onChange={(e) => handleDimensionChange('depth', parseFloat(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+    <div style={s.shell}>
+
+      {/* Toolbar */}
+      <div style={s.toolbar}>
+        <span style={s.toolbarTitle}>KerfOS — {cabinet.name}</span>
+        <div style={s.toolbarActions}>
+          <button style={s.tbBtn}>Undo</button>
+          <button style={s.tbBtn}>Redo</button>
+          <button style={s.tbBtnPrimary}>Export</button>
         </div>
       </div>
 
-      {/* Material Selection */}
-      <div className="space-y-4">
-        <div className="flex items-center space-x-2">
-          <Box className="w-5 h-5 text-gray-500" />
-          <h3 className="text-lg font-medium">Material</h3>
-        </div>
-        
-        <div className="grid grid-cols-3 gap-4">
-          {materials.map((material) => (
-            <button
-              key={material.id}
-              onClick={() => handleMaterialChange(material.name)}
-              className={`p-4 border rounded-lg text-center transition-colors ${
-                cabinet.material === material.name
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
+      {/* Middle row */}
+      <div style={s.middle}>
+
+        {/* Left palette */}
+        <div style={s.palette}>
+          <div style={s.paletteHeader}>Components</div>
+          {PALETTE_ITEMS.map(item => (
+            <div key={item.id} style={s.paletteItem}>
+              {item.label}
+            </div>
+          ))}
+          <div style={{ ...s.paletteHeader, marginTop: 'auto' }}>Materials</div>
+          {MATERIALS.map(mat => (
+            <div
+              key={mat.id}
+              onClick={() => setCabinet(p => ({ ...p, material: mat.name }))}
+              style={{
+                ...s.paletteItem,
+                color: cabinet.material === mat.name
+                  ? 'var(--k-canvas-accent)'
+                  : 'var(--k-canvas-text)',
+                background: cabinet.material === mat.name
+                  ? 'var(--k-canvas-accent-dim)'
+                  : 'transparent',
+              }}
             >
-              <div className="font-medium">{material.name}</div>
-              <div className="text-sm text-gray-600">${material.price}/sheet</div>
-            </button>
+              {mat.name}
+            </div>
           ))}
         </div>
-      </div>
 
-      {/* Calculate Button */}
-      <button
-        onClick={handleCalculate}
-        className="w-full py-3 px-4 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-      >
-        Calculate Cut List & Price
-      </button>
+        {/* Center canvas */}
+        <div style={s.canvas}>
+          <CabinetPreview cabinet={cabinet} material={selectedMaterial} />
+        </div>
 
-      {/* Results */}
-      {cutList.length > 0 && (
-        <div className="space-y-6">
-          {/* Cut List */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <Scissors className="w-5 h-5 text-gray-500" />
-              <h3 className="text-lg font-medium">Cut List</h3>
-            </div>
-            
-            <div className="bg-gray-50 rounded-lg p-4">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-2">Part</th>
-                    <th className="text-left py-2">Qty</th>
-                    <th className="text-left py-2">Width</th>
-                    <th className="text-left py-2">Height</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {cutList.map((cut, index) => (
-                    <tr key={index} className="border-b last:border-0">
-                      <td className="py-2">{cut.part}</td>
-                      <td className="py-2">{cut.quantity}</td>
-                      <td className="py-2">{cut.width.toFixed(1)}"</td>
-                      <td className="py-2">{cut.height.toFixed(1)}"</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+        {/* Right properties panel */}
+        <div style={s.panel}>
+          <div style={s.panelHeader}>Properties</div>
+          <div style={s.panelBody}>
 
-          {/* Price */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <DollarSign className="w-5 h-5 text-gray-500" />
-              <h3 className="text-lg font-medium">Estimated Cost</h3>
-            </div>
-            
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <div className="text-2xl font-bold text-green-700">
-                ${price.toFixed(2)}
+            <p style={s.sectionLabel}>Dimensions (inches)</p>
+
+            <label style={s.fieldLabel}>Width</label>
+            <input
+              style={s.input}
+              type="number"
+              value={cabinet.width}
+              onChange={e => handleDim('width', e.target.value)}
+            />
+
+            <label style={s.fieldLabel}>Height</label>
+            <input
+              style={s.input}
+              type="number"
+              value={cabinet.height}
+              onChange={e => handleDim('height', e.target.value)}
+            />
+
+            <label style={s.fieldLabel}>Depth</label>
+            <input
+              style={s.input}
+              type="number"
+              value={cabinet.depth}
+              onChange={e => handleDim('depth', e.target.value)}
+            />
+
+            <div style={s.sectionDivider} />
+            <p style={s.sectionLabel}>Material</p>
+
+            <select
+              style={s.select}
+              value={cabinet.material}
+              onChange={e => setCabinet(p => ({ ...p, material: e.target.value }))}
+            >
+              {MATERIALS.map(m => (
+                <option key={m.id} value={m.name}>{m.name}</option>
+              ))}
+            </select>
+
+            <div style={s.sectionDivider} />
+            <p style={s.sectionLabel}>Cut List</p>
+
+            {cutList.map((cut, i) => (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '7px' }}>
+                <span style={{ fontSize: '12px', color: 'var(--k-canvas-text-muted)' }}>
+                  {cut.qty}× {cut.part}
+                </span>
+                <span style={{ fontSize: '12px', color: 'var(--k-canvas-text)', fontVariantNumeric: 'tabular-nums' }}>
+                  {cut.w.toFixed(1)}" × {cut.h.toFixed(1)}"
+                </span>
               </div>
-              <div className="text-sm text-green-600 mt-1">
-                Includes material and hardware
-              </div>
-            </div>
+            ))}
+
           </div>
         </div>
-      )}
 
-      {/* Cabinet Preview */}
-      <div className="mt-8 p-4 bg-gray-900 rounded-lg">
-        <div className="text-white text-center mb-4">3D Preview (Coming Soon)</div>
-        <div className="h-48 bg-gray-800 rounded flex items-center justify-center">
-          <div className="text-gray-400">
-            <Box className="w-12 h-12 mx-auto mb-2" />
-            <div>Interactive 3D visualization</div>
-            <div className="text-sm">Powered by Three.js</div>
-          </div>
-        </div>
       </div>
+
+      {/* Bottom bar */}
+      <div style={s.bottomBar}>
+        <div style={s.bottomStat}>
+          <span>Parts</span>
+          <span style={s.bottomStatValue}>{cutList.reduce((n, c) => n + c.qty, 0)}</span>
+        </div>
+        <div style={s.bottomStat}>
+          <span>Material</span>
+          <span style={s.bottomStatValue}>{selectedMaterial.name}</span>
+        </div>
+        <div style={s.bottomStat}>
+          <span>Est. Cost</span>
+          <span style={s.bottomStatValue}>${cost.toFixed(2)}</span>
+        </div>
+        <button style={s.exportBtn}>Export ▾</button>
+      </div>
+
     </div>
   )
 }
