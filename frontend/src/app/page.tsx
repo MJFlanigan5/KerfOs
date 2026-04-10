@@ -178,113 +178,113 @@ export default function HomePage() {
       <ScrollBar />
 
       {/* ── HERO ─────────────────────────────────────────────────────── */}
-      <section
-        style={{
-          minHeight: 'calc(100vh - 60px)',
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '0',
-          maxWidth: '1280px',
-          margin: '0 auto',
-          padding: '0 40px',
-          alignItems: 'center',
-        }}
-        className="hero-grid"
-      >
-        {/* Left: copy */}
-        <div style={{ paddingRight: '64px' }}>
-          <div className="fade-up fade-up-1" style={{ marginBottom: '20px' }}>
-            <span className="k-badge k-badge-amber">
-              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--k-amber)', display: 'inline-block', flexShrink: 0 }} />
-              No training course required
+      <section className="hero-dark" style={{
+        minHeight: 'calc(100vh - 60px)',
+        background: '#0a0e1c',
+        position: 'relative',
+        overflow: 'hidden',
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+      }}>
+        {/* Animated grid overlay */}
+        <div className="hero-grid-bg" aria-hidden="true" />
+
+        {/* Left: editorial copy */}
+        <div style={{
+          padding: '80px 0 80px 60px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          position: 'relative',
+          zIndex: 2,
+          maxWidth: '640px',
+        }}>
+          {/* Eyebrow badge */}
+          <div className="fade-up fade-up-1" style={{ marginBottom: '28px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: '6px',
+              padding: '4px 12px', borderRadius: '2px',
+              border: '1px solid rgba(6,182,212,0.25)',
+              background: 'rgba(6,182,212,0.06)',
+              fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em',
+              textTransform: 'uppercase', color: '#06b6d4',
+            }}>
+              <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#06b6d4', display: 'inline-block', flexShrink: 0 }} />
+              Free to start — no credit card
             </span>
           </div>
 
-          <h1
-            className="k-heading-xl fade-up fade-up-2"
-            style={{ marginBottom: '24px' }}
-          >
-            CNC cabinet software
-            <br />
-            <span style={{ color: 'var(--k-ink-3)', fontWeight: 400 }}>
-              built for the
-            </span>{' '}
-            <span style={{ position: 'relative', display: 'inline-block' }}>
-              shop floor
-              <span className="k-kerf-line" style={{ position: 'absolute', bottom: '-4px', left: 0, right: 0 }} />
-            </span>
+          {/* Headline */}
+          <h1 className="fade-up fade-up-2" style={{
+            fontFamily: 'var(--font-sora), Sora, sans-serif',
+            fontSize: 'clamp(44px, 5.5vw, 80px)',
+            fontWeight: 700,
+            letterSpacing: '-0.04em',
+            lineHeight: 1.02,
+            color: '#f5f0eb',
+            marginBottom: '28px',
+          }}>
+            CNC cabinet<br />
+            software for<br />
+            <span style={{ color: '#06b6d4' }}>woodworkers<br />
+            who ship.</span>
           </h1>
 
-          <p
-            className="fade-up fade-up-3"
-            style={{
-              fontSize: '18px',
-              lineHeight: 1.65,
-              color: 'var(--k-ink-2)',
-              maxWidth: '480px',
-              marginBottom: '36px',
-            }}
-          >
+          {/* Subtext */}
+          <p className="fade-up fade-up-3" style={{
+            fontSize: '17px',
+            lineHeight: 1.7,
+            color: 'rgba(245,240,235,0.55)',
+            maxWidth: '440px',
+            marginBottom: '40px',
+          }}>
             Design cabinets, generate precise cut lists, and send G-code to your CNC
             in minutes — not days. No $10,000 license. No 40-hour training video.
           </p>
 
-          <div className="fade-up fade-up-4" style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <Link href="/design/builder" className="k-btn k-btn-primary k-btn-lg">
-              Start designing free
+          {/* CTAs */}
+          <div className="fade-up fade-up-4" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '48px' }}>
+            <Link href="/design/builder" className="k-btn k-btn-lg" style={{
+              background: '#06b6d4', color: '#0a0e1c', fontWeight: 700,
+              border: 'none',
+            }}>
+              Start building free →
             </Link>
-            <Link href="/community/gallery" className="k-btn k-btn-ghost k-btn-lg">
+            <Link href="/community/gallery" className="k-btn k-btn-lg" style={{
+              background: 'rgba(245,240,235,0.06)',
+              color: 'rgba(245,240,235,0.8)',
+              border: '1px solid rgba(245,240,235,0.12)',
+            }}>
               See what people build
             </Link>
           </div>
 
-          <div
-            className="fade-up fade-up-5"
-            style={{
-              marginTop: '40px',
-              display: 'flex',
-              gap: '28px',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-            }}
-          >
+          {/* Value props strip */}
+          <div className="fade-up fade-up-5" style={{
+            display: 'flex',
+            gap: '32px',
+            paddingTop: '28px',
+            borderTop: '1px solid rgba(245,240,235,0.08)',
+          }}>
             {[
-              { val: '$0', label: 'Free tier, no credit card' },
-              { val: '100%', label: 'Browser-based, no install' },
-              { val: '6+', label: 'CNC machine formats' },
-            ].map((stat) => (
-              <div key={stat.label}>
-                <div
-                  style={{
-                    fontFamily: 'var(--font-sora), Sora, sans-serif',
-                    fontSize: '28px',
-                    fontWeight: 700,
-                    letterSpacing: '-0.04em',
-                    color: 'var(--k-ink)',
-                    lineHeight: 1,
-                  }}
-                >
-                  {stat.val}
-                </div>
-                <div style={{ fontSize: '12px', color: 'var(--k-ink-4)', marginTop: '4px', letterSpacing: '0.02em' }}>
-                  {stat.label}
-                </div>
+              { val: '$0',   label: 'Free to start' },
+              { val: '100%', label: 'Browser-based' },
+              { val: '6+',   label: 'CNC formats' },
+            ].map(s => (
+              <div key={s.label}>
+                <div style={{
+                  fontFamily: 'var(--font-sora), Sora, sans-serif',
+                  fontSize: '26px', fontWeight: 700,
+                  letterSpacing: '-0.04em', color: '#f5f0eb', lineHeight: 1,
+                }}>{s.val}</div>
+                <div style={{ fontSize: '11px', color: 'rgba(245,240,235,0.4)', marginTop: '4px', letterSpacing: '0.02em' }}>{s.label}</div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Right: actual 3D canvas preview */}
-        <div
-          className="fade-up fade-up-3 hero-canvas-panel"
-          style={{
-            position: 'relative',
-            borderRadius: '6px',
-            overflow: 'hidden',
-            border: '1px solid var(--k-canvas-border)',
-            height: '520px',
-          }}
-        >
+        {/* Right: 3D canvas — full height, no border-radius, bleeds to edge */}
+        <div style={{ position: 'relative', borderLeft: '1px solid rgba(196,93,44,0.12)', overflow: 'hidden' }}>
           <CabinetPreview
             cabinet={DEMO_CABINET}
             material={null}
@@ -294,33 +294,55 @@ export default function HomePage() {
             onMove={() => {}}
             autoRotate
           />
-          {/* "Live demo" badge */}
+          {/* Live demo badge */}
           <div style={{
-            position: 'absolute', top: '12px', left: '12px',
-            background: 'rgba(15,10,7,0.82)', backdropFilter: 'blur(8px)',
-            border: '1px solid var(--k-canvas-border)',
-            padding: '5px 11px', borderRadius: '3px',
-            display: 'flex', alignItems: 'center', gap: '6px',
-            pointerEvents: 'none',
+            position: 'absolute', top: '16px', left: '16px',
+            background: 'rgba(10,14,28,0.8)', backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(6,182,212,0.2)',
+            padding: '5px 12px', borderRadius: '2px',
+            display: 'flex', alignItems: 'center', gap: '7px',
+            pointerEvents: 'none', zIndex: 10,
           }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#06b6d4', display: 'inline-block', flexShrink: 0 }} />
-            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--k-canvas-text)', letterSpacing: '0.04em' }}>
-              Live demo · drag to rotate
+            <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#06b6d4', display: 'inline-block', flexShrink: 0 }} />
+            <span style={{ fontSize: '10px', fontWeight: 600, color: 'rgba(245,240,235,0.7)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+              Live demo · drag to orbit
             </span>
           </div>
-          {/* CTA overlay */}
-          <div style={{
-            position: 'absolute', bottom: '52px', right: '12px',
-          }}>
-            <Link href="/design/builder" className="k-btn k-btn-sm" style={{
-              background: 'rgba(6,182,212,0.15)',
+          {/* Open builder CTA */}
+          <div style={{ position: 'absolute', bottom: '60px', right: '16px', zIndex: 10 }}>
+            <Link href="/design/builder" style={{
+              display: 'inline-flex', alignItems: 'center', gap: '6px',
+              padding: '7px 14px',
+              background: 'rgba(6,182,212,0.12)',
               color: '#06b6d4',
-              border: '1px solid rgba(6,182,212,0.3)',
-              backdropFilter: 'blur(8px)',
-              fontSize: '12px',
+              border: '1px solid rgba(6,182,212,0.25)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: '2px',
+              fontSize: '12px', fontWeight: 600,
+              textDecoration: 'none',
+              transition: 'background 150ms ease',
+              letterSpacing: '0.01em',
             }}>
               Open builder →
             </Link>
+          </div>
+          {/* Measurement annotations */}
+          <div style={{
+            position: 'absolute', top: '16px', right: '16px',
+            display: 'flex', flexDirection: 'column', gap: '4px',
+            pointerEvents: 'none', zIndex: 10,
+          }}>
+            {[{ label: 'W', val: '24.00"' }, { label: 'H', val: '34.50"' }, { label: 'D', val: '23.75"' }].map(d => (
+              <div key={d.label} style={{
+                display: 'flex', alignItems: 'center', gap: '6px',
+                background: 'rgba(10,14,28,0.75)', backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(196,93,44,0.15)',
+                padding: '3px 8px', borderRadius: '2px',
+              }}>
+                <span style={{ fontSize: '9px', fontWeight: 700, color: 'rgba(232,201,154,0.5)', letterSpacing: '0.06em' }}>{d.label}</span>
+                <span style={{ fontFamily: 'var(--font-mono), monospace', fontSize: '11px', fontWeight: 500, color: '#e8c99a' }}>{d.val}</span>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -328,10 +350,9 @@ export default function HomePage() {
       {/* ── TICKER STRIP ─────────────────────────────────────────────── */}
       <div
         style={{
-          borderTop: '1px solid var(--k-border)',
           borderBottom: '1px solid var(--k-border)',
           padding: '14px 0',
-          background: 'var(--k-surface)',
+          background: '#080b17',
           overflow: 'hidden',
         }}
       >
@@ -346,7 +367,7 @@ export default function HomePage() {
                   fontWeight: 500,
                   letterSpacing: '0.04em',
                   textTransform: 'uppercase',
-                  color: i % 6 === 0 ? 'var(--k-amber-dark)' : 'var(--k-ink-3)',
+                  color: i % 6 === 0 ? '#06b6d4' : 'rgba(245,240,235,0.3)',
                   whiteSpace: 'nowrap',
                 }}
               >
@@ -677,9 +698,6 @@ export default function HomePage() {
       {/* ── Responsive overrides ──────────────────────────────────────── */}
       <style>{`
         @media (max-width: 900px) {
-          .hero-grid { grid-template-columns: 1fr !important; padding: 48px 24px !important; }
-          .hero-grid > div:first-child { padding-right: 0 !important; }
-          .hero-canvas-panel { display: none !important; }
           .bento-grid { grid-template-columns: 1fr !important; }
           .bento-grid > div[style*="span 2"] { grid-column: span 1 !important; }
           .compare-grid { grid-template-columns: 1fr !important; }

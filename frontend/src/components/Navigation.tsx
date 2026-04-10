@@ -4,77 +4,21 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-const navItems = [
-  {
-    label: 'Design',
-    href: '/design',
-    children: [
-      { label: 'Cabinet Builder', href: '/design/builder' },
-      { label: 'Style Presets', href: '/design/presets' },
-      { label: 'Templates', href: '/design/templates' },
-      { label: 'Sketch Import', href: '/design/sketch' },
-      { label: 'AR Scanner', href: '/design/ar-scanner' },
-    ],
-  },
-  {
-    label: 'Materials',
-    href: '/materials',
-    children: [
-      { label: 'Material Selector', href: '/materials/selector' },
-      { label: 'Multi-Material', href: '/materials/multi' },
-      { label: 'Edge Banding', href: '/materials/edge-banding' },
-    ],
-  },
-  {
-    label: 'Optimize',
-    href: '/optimize',
-    children: [
-      { label: 'Cut List', href: '/optimize/cutlist' },
-      { label: 'Nesting', href: '/optimize/nesting' },
-      { label: 'Cost Optimizer', href: '/optimize/cost' },
-      { label: 'Design Doctor', href: '/optimize/doctor' },
-      { label: 'Scrap Tracker', href: '/optimize/scrap' },
-      { label: 'Board Yield', href: '/optimize/yield' },
-    ],
-  },
-  {
-    label: 'Export',
-    href: '/export',
-    children: [
-      { label: 'G-Code', href: '/export/gcode' },
-      { label: '3D Export', href: '/export/3d' },
-    ],
-  },
-  {
-    label: 'Hardware',
-    href: '/hardware',
-    children: [
-      { label: 'Hardware Finder', href: '/hardware/finder' },
-      { label: 'Recommendations', href: '/hardware/recommendations' },
-    ],
-  },
-  {
-    label: 'Community',
-    href: '/community',
-    children: [
-      { label: 'Gallery', href: '/community/gallery' },
-      { label: 'Brag Sheet', href: '/community/brag-sheet' },
-    ],
-  },
+const NAV_LINKS = [
+  { label: 'Builder',   href: '/design/builder' },
+  { label: 'Optimize',  href: '/optimize' },
+  { label: 'Pricing',   href: '/#pricing' },
+  { label: 'Community', href: '/community' },
 ]
 
 function KerfOSLogo() {
   return (
-    <Link href="/" className="flex items-center gap-3 group" aria-label="KerfOS home">
-      {/* Logomark: diagonal split — dark navy upper, cyan lower, kerf line */}
-      <svg
-        width="30"
-        height="30"
-        viewBox="0 0 56 56"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden="true"
-      >
+    <Link
+      href="/"
+      aria-label="KerfOS home"
+      style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none', flexShrink: 0 }}
+    >
+      <svg width="28" height="28" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <defs>
           <clipPath id="nav-u"><polygon points="0,0 56,0 0,56"/></clipPath>
           <clipPath id="nav-l"><polygon points="56,0 56,56 0,56"/></clipPath>
@@ -89,42 +33,32 @@ function KerfOSLogo() {
         </g>
         <line x1="1" y1="1" x2="55" y2="55" stroke="#00e5ff" strokeWidth="1.5" strokeLinecap="round" filter="url(#nav-g)"/>
       </svg>
-      {/* Wordmark */}
-      <div className="flex items-baseline gap-0.5">
-        <span
-          style={{
-            fontFamily: 'var(--font-sora), Sora, sans-serif',
-            fontWeight: 700,
-            fontSize: '18px',
-            letterSpacing: '-0.04em',
-            color: '#0a0e1c',
-            lineHeight: 1,
-          }}
-        >
-          Kerf
-        </span>
-        <span
-          style={{
-            fontFamily: 'var(--font-sora), Sora, sans-serif',
-            fontWeight: 400,
-            fontSize: '18px',
-            letterSpacing: '-0.02em',
-            color: '#06b6d4',
-            lineHeight: 1,
-          }}
-        >
-          OS
-        </span>
-      </div>
+      <span style={{
+        fontFamily: 'var(--font-sora), Sora, sans-serif',
+        fontWeight: 700,
+        fontSize: '17px',
+        letterSpacing: '-0.04em',
+        color: '#0a0e1c',
+        lineHeight: 1,
+      }}>
+        Kerf<span style={{ color: '#06b6d4', fontWeight: 400 }}>OS</span>
+      </span>
     </Link>
   )
 }
 
 export default function Navigation() {
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
-  const [scrolled, setScrolled] = useState(false)
+  const [isMobile, setIsMobile]     = useState(false)
+  const [scrolled, setScrolled]     = useState(false)
   const pathname = usePathname()
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 900)
+    check()
+    window.addEventListener('resize', check, { passive: true })
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8)
@@ -133,263 +67,147 @@ export default function Navigation() {
   }, [])
 
   return (
-    <nav
-      style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-        height: '60px',
+    <nav style={{
+      position: 'sticky',
+      top: 0,
+      zIndex: 100,
+      height: '60px',
+      display: 'flex',
+      alignItems: 'center',
+      backgroundColor: scrolled ? 'rgba(248,247,244,0.92)' : 'var(--k-bg)',
+      backdropFilter: scrolled ? 'blur(16px)' : 'none',
+      WebkitBackdropFilter: scrolled ? 'blur(16px)' : 'none',
+      borderBottom: scrolled ? '1px solid var(--k-border)' : '1px solid transparent',
+      transition: 'background-color 200ms ease, border-color 200ms ease',
+    }}>
+      <div style={{
+        width: '100%',
+        maxWidth: '1280px',
+        margin: '0 auto',
+        padding: '0 24px',
         display: 'flex',
         alignItems: 'center',
-        backgroundColor: scrolled ? 'rgba(248, 247, 244, 0.88)' : 'var(--k-bg)',
-        backdropFilter: scrolled ? 'blur(16px)' : 'none',
-        WebkitBackdropFilter: scrolled ? 'blur(16px)' : 'none',
-        borderBottom: scrolled ? '1px solid var(--k-border)' : '1px solid transparent',
-        transition: 'background-color 200ms ease, border-color 200ms ease, backdrop-filter 200ms ease',
-      }}
-    >
-      <div
-        style={{
-          width: '100%',
-          maxWidth: '1280px',
-          margin: '0 auto',
-          padding: '0 24px',
-          display: 'grid',
-          gridTemplateColumns: '1fr auto 1fr',
-          alignItems: 'center',
-          gap: '16px',
-        }}
-      >
-        {/* Logo */}
+        justifyContent: 'space-between',
+        gap: '24px',
+      }}>
         <KerfOSLogo />
 
-        {/* Desktop nav — centered */}
-        <div className="hidden lg:flex items-center gap-1">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-            return (
-              <div
-                key={item.href}
-                className="relative"
-                onMouseEnter={() => setActiveDropdown(item.label)}
-                onMouseLeave={() => setActiveDropdown(null)}
-              >
+        {/* Desktop links — only renders when not mobile */}
+        {!isMobile && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '2px', flex: 1, justifyContent: 'center' }}>
+            {NAV_LINKS.map(link => {
+              const isActive = pathname === link.href || pathname.startsWith(link.href.split('#')[0] + '/')
+              return (
                 <Link
-                  href={item.href}
+                  key={link.href}
+                  href={link.href}
                   style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    padding: '6px 10px',
+                    padding: '6px 14px',
                     borderRadius: 'var(--k-r-sm)',
                     fontSize: '13px',
                     fontWeight: isActive ? 500 : 400,
-                    letterSpacing: '-0.01em',
                     color: isActive ? 'var(--k-ink)' : 'var(--k-ink-2)',
                     background: isActive ? 'var(--k-surface-2)' : 'transparent',
-                    transition: 'color 120ms ease, background 120ms ease',
                     textDecoration: 'none',
+                    transition: 'color 120ms ease, background 120ms ease',
                     whiteSpace: 'nowrap',
                   }}
-                  onMouseEnter={(e) => {
+                  onMouseEnter={e => {
                     if (!isActive) {
                       e.currentTarget.style.color = 'var(--k-ink)'
                       e.currentTarget.style.background = 'var(--k-surface-2)'
                     }
                   }}
-                  onMouseLeave={(e) => {
+                  onMouseLeave={e => {
                     if (!isActive) {
                       e.currentTarget.style.color = 'var(--k-ink-2)'
                       e.currentTarget.style.background = 'transparent'
                     }
                   }}
                 >
-                  {item.label}
-                  {item.children && (
-                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ opacity: 0.5, marginTop: 1 }}>
-                      <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  )}
+                  {link.label}
                 </Link>
+              )
+            })}
+          </div>
+        )}
 
-                {/* Dropdown */}
-                {item.children && activeDropdown === item.label && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: 'calc(100% + 6px)',
-                      left: 0,
-                      minWidth: '180px',
-                      background: 'var(--k-surface)',
-                      border: '1px solid var(--k-border)',
-                      borderRadius: 'var(--k-r-md)',
-                      boxShadow: 'var(--k-shadow-lg)',
-                      padding: '6px',
-                      zIndex: 200,
-                    }}
-                  >
-                    {item.children.map((child) => (
-                      <Link
-                        key={child.href}
-                        href={child.href}
-                        style={{
-                          display: 'block',
-                          padding: '7px 12px',
-                          borderRadius: 'var(--k-r-xs)',
-                          fontSize: '13px',
-                          color: 'var(--k-ink-2)',
-                          letterSpacing: '-0.01em',
-                          textDecoration: 'none',
-                          transition: 'color 100ms ease, background 100ms ease',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.color = 'var(--k-ink)'
-                          e.currentTarget.style.background = 'var(--k-bg-subtle)'
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.color = 'var(--k-ink-2)'
-                          e.currentTarget.style.background = 'transparent'
-                        }}
-                      >
-                        {child.label}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-
-        {/* Right column: CTAs (desktop) + hamburger (mobile) */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
-          {/* Desktop CTAs */}
-          <button
-            className="hidden lg:inline-flex"
-            style={{
-              padding: '7px 14px',
-              fontSize: '13px',
-              fontWeight: 500,
-              color: 'var(--k-ink-2)',
-              background: 'transparent',
-              border: 'none',
-              borderRadius: 'var(--k-r-sm)',
-              cursor: 'pointer',
-              letterSpacing: '-0.01em',
-              transition: 'color 120ms ease',
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--k-ink)' }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--k-ink-2)' }}
-          >
-            Sign in
-          </button>
-          <Link
-            href="/pricing"
-            className="k-btn k-btn-primary k-btn-sm hidden lg:inline-flex"
-          >
-            Start free
-          </Link>
-
-          {/* Mobile hamburger */}
-          <button
-            className="lg:hidden"
-            onClick={() => setMobileOpen(!mobileOpen)}
-            aria-label="Toggle menu"
-            style={{
-              width: '36px',
-              height: '36px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '5px',
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              padding: 0,
-            }}
-          >
-            <span style={{
-              display: 'block', width: '18px', height: '1.5px',
-              background: 'var(--k-ink)',
-              transform: mobileOpen ? 'translateY(6.5px) rotate(45deg)' : 'none',
-              transition: 'transform 200ms var(--k-ease)',
-              transformOrigin: 'center',
-            }} />
-            <span style={{
-              display: 'block', width: '18px', height: '1.5px',
-              background: 'var(--k-ink)',
-              opacity: mobileOpen ? 0 : 1,
-              transition: 'opacity 150ms ease',
-            }} />
-            <span style={{
-              display: 'block', width: '18px', height: '1.5px',
-              background: 'var(--k-ink)',
-              transform: mobileOpen ? 'translateY(-6.5px) rotate(-45deg)' : 'none',
-              transition: 'transform 200ms var(--k-ease)',
-              transformOrigin: 'center',
-            }} />
-          </button>
+        {/* Right: CTAs (desktop) or hamburger (mobile) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+          {!isMobile ? (
+            <>
+              <button
+                style={{
+                  padding: '7px 14px', fontSize: '13px', fontWeight: 500,
+                  color: 'var(--k-ink-2)', background: 'transparent',
+                  border: 'none', borderRadius: 'var(--k-r-sm)',
+                  cursor: 'pointer', letterSpacing: '-0.01em',
+                  transition: 'color 120ms ease',
+                }}
+                onMouseEnter={e => e.currentTarget.style.color = 'var(--k-ink)'}
+                onMouseLeave={e => e.currentTarget.style.color = 'var(--k-ink-2)'}
+              >
+                Sign in
+              </button>
+              <Link href="/design/builder" className="k-btn k-btn-primary k-btn-sm">
+                Start free
+              </Link>
+            </>
+          ) : (
+            <button
+              onClick={() => setMobileOpen(o => !o)}
+              aria-label="Toggle menu"
+              style={{
+                width: '36px', height: '36px', display: 'flex',
+                flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                gap: '5px', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0,
+              }}
+            >
+              {[0, 1, 2].map(i => (
+                <span key={i} style={{
+                  display: 'block', width: '18px', height: '1.5px',
+                  background: 'var(--k-ink)',
+                  transform: mobileOpen && i === 0 ? 'translateY(6.5px) rotate(45deg)' :
+                             mobileOpen && i === 2 ? 'translateY(-6.5px) rotate(-45deg)' : 'none',
+                  opacity: mobileOpen && i === 1 ? 0 : 1,
+                  transition: 'transform 200ms ease, opacity 150ms ease',
+                  transformOrigin: 'center',
+                }} />
+              ))}
+            </button>
+          )}
         </div>
       </div>
 
       {/* Mobile drawer */}
-      {mobileOpen && (
-        <div
-          style={{
-            position: 'absolute',
-            top: '60px',
-            left: 0,
-            right: 0,
-            background: 'var(--k-surface)',
-            borderBottom: '1px solid var(--k-border)',
-            boxShadow: 'var(--k-shadow-md)',
-            padding: '16px 24px 24px',
-            zIndex: 99,
-          }}
-        >
-          {navItems.map((item) => (
-            <div key={item.href} style={{ marginBottom: '4px' }}>
-              <Link
-                href={item.href}
-                onClick={() => setMobileOpen(false)}
-                style={{
-                  display: 'block',
-                  padding: '8px 0',
-                  fontSize: '15px',
-                  fontWeight: 500,
-                  color: 'var(--k-ink)',
-                  textDecoration: 'none',
-                  letterSpacing: '-0.01em',
-                }}
-              >
-                {item.label}
-              </Link>
-              {item.children && (
-                <div style={{ paddingLeft: '12px', borderLeft: '2px solid var(--k-border)', marginBottom: '8px' }}>
-                  {item.children.map((child) => (
-                    <Link
-                      key={child.href}
-                      href={child.href}
-                      onClick={() => setMobileOpen(false)}
-                      style={{
-                        display: 'block',
-                        padding: '5px 0',
-                        fontSize: '13px',
-                        color: 'var(--k-ink-3)',
-                        textDecoration: 'none',
-                      }}
-                    >
-                      {child.label}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
+      {mobileOpen && isMobile && (
+        <div style={{
+          position: 'absolute', top: '60px', left: 0, right: 0,
+          background: 'var(--k-surface)',
+          borderBottom: '1px solid var(--k-border)',
+          boxShadow: 'var(--k-shadow-md)',
+          padding: '12px 24px 24px',
+          zIndex: 99,
+        }}>
+          {NAV_LINKS.map(link => (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={() => setMobileOpen(false)}
+              style={{
+                display: 'block', padding: '11px 0',
+                fontSize: '15px', fontWeight: 500,
+                color: 'var(--k-ink)', textDecoration: 'none',
+                borderBottom: '1px solid var(--k-border)',
+                letterSpacing: '-0.01em',
+              }}
+            >
+              {link.label}
+            </Link>
           ))}
-          <div style={{ borderTop: '1px solid var(--k-border)', paddingTop: '16px', marginTop: '8px', display: 'flex', gap: '10px' }}>
+          <div style={{ paddingTop: '16px', display: 'flex', gap: '10px' }}>
             <button className="k-btn k-btn-ghost" style={{ flex: 1 }}>Sign in</button>
-            <Link href="/pricing" className="k-btn k-btn-primary" style={{ flex: 1, justifyContent: 'center' }}>
+            <Link href="/design/builder" className="k-btn k-btn-primary" style={{ flex: 1, justifyContent: 'center' }}>
               Start free
             </Link>
           </div>

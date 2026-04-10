@@ -394,3 +394,37 @@ body {
   max-width: 1280px;
   margin: 0 auto;
 }
+
+/* ─── Hero dark section ─────────────────────────────────────────────────────── */
+
+@keyframes heroGridScroll {
+  from { background-position: 0 0, 0 0; }
+  to   { background-position: 0 60px, 0 60px; }
+}
+
+.hero-grid-bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(196, 93, 44, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(196, 93, 44, 0.04) 1px, transparent 1px);
+  background-size: 60px 60px;
+  animation: heroGridScroll 10s linear infinite;
+  pointer-events: none;
+}
+
+@media (max-width: 900px) {
+  .hero-dark {
+    grid-template-columns: 1fr !important;
+    min-height: auto !important;
+  }
+  .hero-dark > div:last-child {
+    height: 380px;
+    border-left: none !important;
+    border-top: 1px solid rgba(196,93,44,0.12);
+  }
+  .hero-dark > div:first-child {
+    padding: 56px 24px 40px !important;
+    max-width: 100% !important;
+  }
+}
