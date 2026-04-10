@@ -14,11 +14,12 @@ interface CabinetPreviewProps {
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   onMove: (id: string, pos: [number, number, number]) => void;
+  autoRotate?: boolean;
 }
 
 // ─── Scene ───────────────────────────────────────────────────────────────────
 
-function Scene({ cabinet, material, components, selectedId, onSelect, onMove }: CabinetPreviewProps) {
+function Scene({ cabinet, material, components, selectedId, onSelect, onMove, autoRotate }: CabinetPreviewProps) {
   const orbitRef = useRef<any>(null);
   const color = getMaterialColor(material?.type);
 
@@ -74,6 +75,8 @@ function Scene({ cabinet, material, components, selectedId, onSelect, onMove }: 
         minDistance={1}
         maxDistance={30}
         maxPolarAngle={Math.PI / 2.05}
+        autoRotate={autoRotate}
+        autoRotateSpeed={0.6}
       />
 
       <GizmoHelper alignment="bottom-right" margin={[60, 60]}>
@@ -89,7 +92,7 @@ function Scene({ cabinet, material, components, selectedId, onSelect, onMove }: 
 // ─── Export ──────────────────────────────────────────────────────────────────
 
 export default function CabinetPreview(props: CabinetPreviewProps) {
-  const { cabinet } = props;
+  const { cabinet, autoRotate } = props;
   const h = cabinet.height / 12;
 
   return (

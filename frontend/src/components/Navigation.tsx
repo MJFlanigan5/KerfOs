@@ -164,7 +164,7 @@ export default function Navigation() {
         <KerfOSLogo />
 
         {/* Desktop nav — centered */}
-        <div className="hidden md:flex items-center gap-1">
+        <div className="hidden lg:flex items-center gap-1">
           {navItems.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
             return (
@@ -265,7 +265,7 @@ export default function Navigation() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
           {/* Desktop CTAs */}
           <button
-            className="hidden md:inline-flex"
+            className="hidden lg:inline-flex"
             style={{
               padding: '7px 14px',
               fontSize: '13px',
@@ -285,14 +285,14 @@ export default function Navigation() {
           </button>
           <Link
             href="/pricing"
-            className="k-btn k-btn-primary k-btn-sm hidden md:inline-flex"
+            className="k-btn k-btn-primary k-btn-sm hidden lg:inline-flex"
           >
             Start free
           </Link>
 
           {/* Mobile hamburger */}
           <button
-            className="md:hidden"
+            className="lg:hidden"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Toggle menu"
             style={{

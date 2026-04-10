@@ -1,7 +1,26 @@
 'use client'
 
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { useEffect, useState } from 'react'
+import type { Cabinet, CanvasComponent } from '@/components/CabinetBuilder'
+
+const CabinetPreview = dynamic(() => import('@/components/CabinetPreview'), {
+  ssr: false,
+  loading: () => <div style={{ width: '100%', height: '100%', background: 'var(--k-canvas-bg)' }} />,
+})
+
+/* ─── Demo data for hero ──────────────────────────────────────────────────── */
+const DEMO_CABINET: Cabinet = {
+  id: 1, name: 'Kitchen Base Cabinet',
+  width: 24, height: 34.5, depth: 23.75, material: 'plywood',
+}
+const DEMO_COMPONENTS: CanvasComponent[] = [
+  { id: 'd1', type: 'box',     name: 'Cabinet Box',   width: 24,   height: 34.5, depth: 23.75, position: [0, 17.25, 0] },
+  { id: 'd2', type: 'shelf',   name: 'Lower Shelf',   width: 22.5, height: 0.75, depth: 21.5,  position: [0, 10,    0] },
+  { id: 'd3', type: 'shelf',   name: 'Upper Shelf',   width: 22.5, height: 0.75, depth: 21.5,  position: [0, 22,    0] },
+  { id: 'd4', type: 'divider', name: 'Center Divider',width: 0.75, height: 30,   depth: 21.5,  position: [5, 16.5,  0] },
+]
 
 /* ─── Scroll Progress Bar ─────────────────────────────────────────────────── */
 function ScrollBar() {
@@ -106,8 +125,15 @@ const TICKER_ITEMS = [
   'Design Doctor', 'Cost Optimizer', 'Material Selector', 'Edge Banding',
 ]
 
-/* ─── Social proof logos ──────────────────────────────────────────────────── */
-const LOGOS = ['Shapeoko', 'X-Carve', 'ShopBot', 'Openbuilds', 'Avid CNC']
+/* ─── Compatible machines ─────────────────────────────────────────────────── */
+const MACHINES = [
+  { name: 'Shapeoko',   fmt: 'GRBL' },
+  { name: 'X-Carve',    fmt: 'GRBL' },
+  { name: 'ShopBot',    fmt: 'SBP' },
+  { name: 'Openbuilds', fmt: 'GRBL' },
+  { name: 'Avid CNC',   fmt: 'FANUC' },
+  { name: 'Mach3/4',    fmt: 'G-code' },
+]
 
 /* ─── Pricing tiers ───────────────────────────────────────────────────────── */
 const PLANS = [
@@ -248,100 +274,53 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Right: floating glass UI preview */}
+        {/* Right: actual 3D canvas preview */}
         <div
-          className="fade-up fade-up-3"
+          className="fade-up fade-up-3 hero-canvas-panel"
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
             position: 'relative',
+            borderRadius: '6px',
+            overflow: 'hidden',
+            border: '1px solid var(--k-canvas-border)',
+            height: '520px',
           }}
         >
-          {/* Background glow */}
-          <div
-            style={{
-              position: 'absolute',
-              width: '400px',
-              height: '400px',
-              borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(6,182,212,0.07) 0%, transparent 70%)',
-              pointerEvents: 'none',
-            }}
+          <CabinetPreview
+            cabinet={DEMO_CABINET}
+            material={null}
+            components={DEMO_COMPONENTS}
+            selectedId={null}
+            onSelect={() => {}}
+            onMove={() => {}}
+            autoRotate
           />
-
-          <div
-            className="k-card-glass"
-            style={{
-              width: '100%',
-              maxWidth: '480px',
-              padding: '32px',
-              position: 'relative',
-            }}
-          >
-            {/* Mock cabinet preview header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
-              <div>
-                <div style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--k-ink-3)', marginBottom: '4px' }}>
-                  Active project
-                </div>
-                <div style={{ fontFamily: 'var(--font-sora), Sora, sans-serif', fontWeight: 600, fontSize: '18px', letterSpacing: '-0.02em', color: 'var(--k-ink)' }}>
-                  Kitchen Base Run
-                </div>
-              </div>
-              <span className="k-badge k-badge-amber">Ready to export</span>
-            </div>
-
-            {/* Mock cabinet dimensions */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '20px' }}>
-              {[
-                { label: 'Width', val: '24.00"' },
-                { label: 'Height', val: '34.50"' },
-                { label: 'Depth', val: '23.75"' },
-              ].map((d) => (
-                <div key={d.label} style={{ padding: '10px 12px', background: 'var(--k-bg-subtle)', borderRadius: 'var(--k-r-sm)', border: '1px solid var(--k-border)' }}>
-                  <div style={{ fontSize: '10px', color: 'var(--k-ink-3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>{d.label}</div>
-                  <div className="k-mono" style={{ fontWeight: 500, color: 'var(--k-ink)', fontSize: '15px' }}>{d.val}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Mock cut list snippet */}
-            <div style={{ background: 'var(--k-ink)', borderRadius: 'var(--k-r-md)', padding: '16px 18px', marginBottom: '20px' }}>
-              <div style={{ fontSize: '10px', color: 'rgba(248,247,244,0.4)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
-                Cut List Preview
-              </div>
-              {[
-                { part: 'Side Panel ×2', dim: '23.75 × 34.50' },
-                { part: 'Bottom Panel ×1', dim: '22.50 × 22.50' },
-                { part: 'Back Panel ×1', dim: '23.00 × 34.00' },
-                { part: 'Shelf ×2', dim: '21.75 × 22.00' },
-              ].map((row, i) => (
-                <div
-                  key={i}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    padding: '4px 0',
-                    borderBottom: i < 3 ? '1px solid rgba(255,255,255,0.06)' : 'none',
-                  }}
-                >
-                  <span style={{ fontSize: '12px', color: 'rgba(248,247,244,0.75)' }}>{row.part}</span>
-                  <span className="k-mono" style={{ fontSize: '11px', color: 'var(--k-amber)' }}>{row.dim}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Board yield bar */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                <span style={{ fontSize: '12px', color: 'var(--k-ink-3)' }}>Board yield</span>
-                <span className="k-mono" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--k-ink)' }}>94.2%</span>
-              </div>
-              <div style={{ height: '6px', background: 'var(--k-border)', borderRadius: 'var(--k-r-full)', overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: '94.2%', background: 'var(--k-amber)', borderRadius: 'var(--k-r-full)' }} />
-              </div>
-            </div>
+          {/* "Live demo" badge */}
+          <div style={{
+            position: 'absolute', top: '12px', left: '12px',
+            background: 'rgba(15,10,7,0.82)', backdropFilter: 'blur(8px)',
+            border: '1px solid var(--k-canvas-border)',
+            padding: '5px 11px', borderRadius: '3px',
+            display: 'flex', alignItems: 'center', gap: '6px',
+            pointerEvents: 'none',
+          }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#06b6d4', display: 'inline-block', flexShrink: 0 }} />
+            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--k-canvas-text)', letterSpacing: '0.04em' }}>
+              Live demo · drag to rotate
+            </span>
+          </div>
+          {/* CTA overlay */}
+          <div style={{
+            position: 'absolute', bottom: '52px', right: '12px',
+          }}>
+            <Link href="/design/builder" className="k-btn k-btn-sm" style={{
+              background: 'rgba(6,182,212,0.15)',
+              color: '#06b6d4',
+              border: '1px solid rgba(6,182,212,0.3)',
+              backdropFilter: 'blur(8px)',
+              fontSize: '12px',
+            }}>
+              Open builder →
+            </Link>
           </div>
         </div>
       </section>
@@ -381,25 +360,34 @@ export default function HomePage() {
 
       {/* ── COMPATIBLE CNC ───────────────────────────────────────────── */}
       <section style={{ padding: '56px 40px', maxWidth: '1280px', margin: '0 auto', textAlign: 'center' }}>
-        <p className="k-label" style={{ marginBottom: '24px' }}>Works with every major CNC</p>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '40px', flexWrap: 'wrap', alignItems: 'center' }}>
-          {LOGOS.map((name) => (
-            <span
+        <p className="k-label" style={{ marginBottom: '24px' }}>Exports G-code for</p>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+          {MACHINES.map(({ name, fmt }) => (
+            <div
               key={name}
               style={{
-                fontFamily: 'var(--font-sora), Sora, sans-serif',
-                fontSize: '15px',
-                fontWeight: 600,
-                letterSpacing: '-0.02em',
-                color: 'var(--k-ink-4)',
-                transition: 'color 200ms ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '8px 14px',
+                background: 'var(--k-surface)',
+                border: '1px solid var(--k-border-mid)',
+                borderRadius: 'var(--k-r-sm)',
                 cursor: 'default',
+                transition: 'border-color 200ms ease, background 200ms ease',
               }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLSpanElement).style.color = 'var(--k-ink)' }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLSpanElement).style.color = 'var(--k-ink-4)' }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(6,182,212,0.4)'
+                ;(e.currentTarget as HTMLDivElement).style.background = 'var(--k-bg-subtle)'
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--k-border-mid)'
+                ;(e.currentTarget as HTMLDivElement).style.background = 'var(--k-surface)'
+              }}
             >
-              {name}
-            </span>
+              <span style={{ fontSize: '13px', fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--k-ink-2)' }}>{name}</span>
+              <span style={{ fontFamily: 'var(--font-mono), monospace', fontSize: '10px', fontWeight: 500, letterSpacing: '0.04em', color: 'var(--k-amber)', background: 'var(--k-amber-soft)', padding: '2px 6px', borderRadius: '2px' }}>{fmt}</span>
+            </div>
           ))}
         </div>
       </section>
@@ -691,7 +679,7 @@ export default function HomePage() {
         @media (max-width: 900px) {
           .hero-grid { grid-template-columns: 1fr !important; padding: 48px 24px !important; }
           .hero-grid > div:first-child { padding-right: 0 !important; }
-          .hero-grid > div:last-child { display: none !important; }
+          .hero-canvas-panel { display: none !important; }
           .bento-grid { grid-template-columns: 1fr !important; }
           .bento-grid > div[style*="span 2"] { grid-column: span 1 !important; }
           .compare-grid { grid-template-columns: 1fr !important; }
