@@ -47,26 +47,24 @@ export default function GCodeExporter({ cabinets, onGCodeGenerated }: GCodeExpor
       setLoading(true);
       setError(null);
 
-      // TODO: Update this URL when backend is deployed
-      const response = await fetch("http://localhost:8000/api/cutlists/generate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ cabinets })
+      // Build cut list client-side from cabinet dimensions
+      const cutList = cabinets.flatMap((cab, sheetIdx) => {
+        const parts = [
+          { partName: `${cab.name} Bottom/Top`, partId: `${cab.id}-bt`, width: cab.width, height: cab.depth, quantity: 2 },
+          { partName: `${cab.name} Sides`,      partId: `${cab.id}-s`,  width: cab.height, height: cab.depth, quantity: 2 },
+          { partName: `${cab.name} Back`,        partId: `${cab.id}-bk`, width: cab.width,  height: cab.height, quantity: 1 },
+          { partName: `${cab.name} Shelves`,     partId: `${cab.id}-sh`, width: cab.width - 1.5, height: cab.depth - 1.5, quantity: 2 },
+        ];
+        return { sheetNumber: sheetIdx + 1, width: 48, height: 96, cuts: parts.flatMap(p =>
+          Array.from({ length: p.quantity }, (_, i) => ({ ...p, partId: `${p.partId}-${i}`, quantity: 1 }))
+        )};
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to generate cut list");
-      }
-
-      const cutListData = await response.json();
-      
-      // Generate G-code from cut list
+      const cutListData = { cutList, totalSheets: cabinets.length };
       const gcodeResponse = await generateGCodeFromCutList(cutListData);
       setGCodeData(gcodeResponse);
       setShowPreview(true);
-      
+
       if (onGCodeGenerated) {
         onGCodeGenerated(gcodeResponse.gcode, gcodeResponse.metadata);
       }
