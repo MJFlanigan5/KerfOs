@@ -1,500 +1,584 @@
-'use client';
+'use client'
 
-import React, { useState, useEffect } from 'react';
-
-interface CommunityGalleryProps {
-  onSelectProject?: (project: GalleryProject) => void;
-}
+import { useState, useEffect, useMemo } from 'react'
 
 interface GalleryProject {
-  id: string;
-  name: string;
-  author: string;
-  authorAvatar?: string;
-  description: string;
-  images: string[];
-  cabinetType: string;
-  style: string;
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
-  estimatedCost: number;
-  actualCost?: number;
-  buildTime: number; // hours
-  rating: number;
-  reviewCount: number;
-  tags: string[];
-  tips: string[];
-  materials: string[];
-  createdAt: Date;
-  featured: boolean;
+  id: string
+  name: string
+  author: string
+  description: string
+  cabinetType: string
+  style: string
+  difficulty: 'beginner' | 'intermediate' | 'advanced'
+  estimatedCost: number
+  actualCost?: number
+  buildTime: number
+  rating: number
+  reviewCount: number
+  tags: string[]
+  tips: string[]
+  materials: string[]
+  createdAt: Date
+  featured: boolean
 }
 
-const CommunityGallery: React.FC<CommunityGalleryProps> = ({ onSelectProject }) => {
-  const [projects, setProjects] = useState<GalleryProject[]>([]);
-  const [filteredProjects, setFilteredProjects] = useState<GalleryProject[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedProject, setSelectedProject] = useState<GalleryProject | null>(null);
-  
-  // Filters
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedStyle, setSelectedStyle] = useState<string>('all');
-  const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
-  const [selectedCabinetType, setSelectedCabinetType] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<'popular' | 'recent' | 'cost'>('popular');
+const MOCK_PROJECTS: GalleryProject[] = [
+  {
+    id: '1',
+    name: 'Modern Farmhouse Kitchen',
+    author: 'WoodWorkerMike',
+    description: 'Complete kitchen renovation with shaker-style cabinets, soft-close drawers, and a massive center island. Used pre-finished maple plywood with maple face frames.',
+    cabinetType: 'kitchen',
+    style: 'shaker',
+    difficulty: 'intermediate',
+    estimatedCost: 4500,
+    actualCost: 4200,
+    buildTime: 120,
+    rating: 4.8,
+    reviewCount: 45,
+    tags: ['kitchen', 'island', 'soft-close', 'maple'],
+    tips: [
+      'Pre-finished plywood saves tons of time on finishing',
+      'Use a story pole for consistent measurements',
+      'Label every part as you cut',
+    ],
+    materials: ['3/4" Maple Plywood', '1x4 Maple face frames', 'Blum soft-close slides', 'Concealed hinges'],
+    createdAt: new Date('2024-01-15'),
+    featured: true,
+  },
+  {
+    id: '2',
+    name: 'Garage Storage System',
+    author: 'DIYDan',
+    description: 'Full-wall storage with cabinets, workbench, and overhead compartments. Built from birch plywood with melamine countertops.',
+    cabinetType: 'garage',
+    style: 'flat-panel',
+    difficulty: 'beginner',
+    estimatedCost: 1200,
+    actualCost: 1350,
+    buildTime: 40,
+    rating: 4.5,
+    reviewCount: 28,
+    tags: ['garage', 'storage', 'workbench', 'budget-friendly'],
+    tips: [
+      'Use 3/4" plywood for durability',
+      'Add adjustable shelf pins for flexibility',
+      'Include toe kick space for comfort',
+    ],
+    materials: ['3/4" Birch Plywood', 'Melamine sheets', 'Heavy-duty shelf pins'],
+    createdAt: new Date('2024-02-20'),
+    featured: false,
+  },
+  {
+    id: '3',
+    name: 'Floating Bathroom Vanity',
+    author: 'ModernMaker',
+    description: 'Wall-mounted double vanity with vessel sinks. Walnut veneer with LED under-cabinet lighting.',
+    cabinetType: 'bathroom',
+    style: 'modern',
+    difficulty: 'advanced',
+    estimatedCost: 1800,
+    actualCost: 2100,
+    buildTime: 65,
+    rating: 4.9,
+    reviewCount: 32,
+    tags: ['bathroom', 'floating', 'modern', 'walnut'],
+    tips: [
+      'Use a French cleat for secure wall mounting',
+      'Seal all surfaces for bathroom moisture',
+      'Plan plumbing access carefully',
+    ],
+    materials: ['Walnut veneer plywood', 'Solid walnut edge banding', 'LED strip lights'],
+    createdAt: new Date('2024-03-01'),
+    featured: true,
+  },
+  {
+    id: '4',
+    name: 'Built-In Bookshelves',
+    author: 'ClassicCarpenter',
+    description: 'Floor-to-ceiling built-in bookcases with integrated desk. Paint-grade with adjustable shelves.',
+    cabinetType: 'living-room',
+    style: 'traditional',
+    difficulty: 'intermediate',
+    estimatedCost: 900,
+    buildTime: 35,
+    rating: 4.6,
+    reviewCount: 19,
+    tags: ['bookshelf', 'built-in', 'desk', 'living-room'],
+    tips: [
+      'Scribe to wall for seamless fit',
+      'Use pocket holes for invisible joinery',
+      'Crown molding adds a professional touch',
+    ],
+    materials: ['MDF', 'Poplar face frames', 'Crown molding'],
+    createdAt: new Date('2024-02-05'),
+    featured: false,
+  },
+  {
+    id: '5',
+    name: 'Kids Playroom Cubbies',
+    author: 'FamilyBuilder',
+    description: 'Colorful cubby storage system with bins and hooks. Rounded corners for safety.',
+    cabinetType: 'bedroom',
+    style: 'slab',
+    difficulty: 'beginner',
+    estimatedCost: 500,
+    actualCost: 480,
+    buildTime: 20,
+    rating: 4.4,
+    reviewCount: 15,
+    tags: ['kids', 'storage', 'cubbies', 'beginner'],
+    tips: [
+      'Round all corners for child safety',
+      'Use durable, washable paint',
+      'Include label holders for organization',
+    ],
+    materials: ['Birch plywood', 'Fabric bins', 'Plastic label holders'],
+    createdAt: new Date('2024-03-10'),
+    featured: false,
+  },
+  {
+    id: '6',
+    name: 'Rustic Pantry Cabinet',
+    author: 'BarnwoodBob',
+    description: 'Freestanding pantry with distressed finish. Reclaimed barn wood accents and chicken wire door panels.',
+    cabinetType: 'kitchen',
+    style: 'rustic',
+    difficulty: 'intermediate',
+    estimatedCost: 800,
+    buildTime: 45,
+    rating: 4.7,
+    reviewCount: 22,
+    tags: ['pantry', 'rustic', 'reclaimed', 'freestanding'],
+    tips: [
+      'Distress before final finish',
+      'Use gel stain for even color on pine',
+      'Seal interior for easy cleaning',
+    ],
+    materials: ['Pine plywood', 'Reclaimed barn wood', 'Chicken wire'],
+    createdAt: new Date('2024-01-28'),
+    featured: true,
+  },
+]
 
-  const styles = ['all', 'shaker', 'flat-panel', 'raised-panel', 'slab', 'rustic', 'modern', 'traditional'];
-  const difficulties = ['all', 'beginner', 'intermediate', 'advanced'];
-  const cabinetTypes = ['all', 'kitchen', 'bathroom', 'garage', 'office', 'living-room', 'bedroom'];
+const STYLES   = ['all', 'shaker', 'flat-panel', 'raised-panel', 'slab', 'rustic', 'modern', 'traditional']
+const DIFFS    = ['all', 'beginner', 'intermediate', 'advanced']
+const ROOMS    = ['all', 'kitchen', 'bathroom', 'garage', 'office', 'living-room', 'bedroom']
 
-  useEffect(() => {
-    // Simulate API fetch
-    const fetchProjects = async () => {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const mockProjects: GalleryProject[] = [
-        {
-          id: '1',
-          name: 'Modern Farmhouse Kitchen',
-          author: 'WoodWorkerMike',
-          description: 'Complete kitchen renovation with shaker-style cabinets, soft-close drawers, and a massive center island. Used pre-finished maple plywood with maple face frames.',
-          images: ['/projects/kitchen1.jpg', '/projects/kitchen1-2.jpg'],
-          cabinetType: 'kitchen',
-          style: 'shaker',
-          difficulty: 'intermediate',
-          estimatedCost: 4500,
-          actualCost: 4200,
-          buildTime: 120,
-          rating: 4.8,
-          reviewCount: 45,
-          tags: ['kitchen', 'island', 'soft-close', 'maple'],
-          tips: [
-            'Pre-finished plywood saves tons of time on finishing',
-            'Use a story pole for consistent measurements',
-            'Label every part as you cut',
-          ],
-          materials: ['3/4" Maple Plywood', '1x4 Maple (face frames)', 'Blum soft-close slides', 'Concealed hinges'],
-          createdAt: new Date('2024-01-15'),
-          featured: true,
-        },
-        {
-          id: '2',
-          name: 'Garage Storage System',
-          author: 'DIYDan',
-          description: 'Full-wall storage with cabinets, workbench, and overhead compartments. Built from birch plywood with melamine countertops.',
-          images: ['/projects/garage1.jpg'],
-          cabinetType: 'garage',
-          style: 'flat-panel',
-          difficulty: 'beginner',
-          estimatedCost: 1200,
-          actualCost: 1350,
-          buildTime: 40,
-          rating: 4.5,
-          reviewCount: 28,
-          tags: ['garage', 'storage', 'workbench', 'budget-friendly'],
-          tips: [
-            'Use 3/4" plywood for durability',
-            'Add adjustable shelf pins for flexibility',
-            'Include toe kick space for comfort',
-          ],
-          materials: ['3/4" Birch Plywood', 'Melamine sheets', 'Heavy-duty shelf pins'],
-          createdAt: new Date('2024-02-20'),
-          featured: false,
-        },
-        {
-          id: '3',
-          name: 'Floating Bathroom Vanity',
-          author: 'ModernMaker',
-          description: 'Wall-mounted double vanity with vessel sinks. Walnut veneer with LED under-cabinet lighting.',
-          images: ['/projects/vanity1.jpg', '/projects/vanity1-2.jpg'],
-          cabinetType: 'bathroom',
-          style: 'modern',
-          difficulty: 'advanced',
-          estimatedCost: 1800,
-          actualCost: 2100,
-          buildTime: 65,
-          rating: 4.9,
-          reviewCount: 32,
-          tags: ['bathroom', 'floating', 'modern', 'walnut'],
-          tips: [
-            'Use a French cleat for secure wall mounting',
-            'Seal all surfaces for bathroom moisture',
-            'Plan plumbing access carefully',
-          ],
-          materials: ['Walnut veneer plywood', 'Solid walnut edge banding', 'LED strip lights'],
-          createdAt: new Date('2024-03-01'),
-          featured: true,
-        },
-        {
-          id: '4',
-          name: 'Built-In Bookshelves',
-          author: 'ClassicCarpenter',
-          description: 'Floor-to-ceiling built-in bookcases with integrated desk. Paint-grade with adjustable shelves.',
-          images: ['/projects/bookshelf1.jpg'],
-          cabinetType: 'living-room',
-          style: 'traditional',
-          difficulty: 'intermediate',
-          estimatedCost: 900,
-          buildTime: 35,
-          rating: 4.6,
-          reviewCount: 19,
-          tags: ['bookshelf', 'built-in', 'desk', 'living-room'],
-          tips: [
-            'Scribe to wall for seamless fit',
-            'Use pocket holes for invisible joinery',
-            'Crown molding adds a professional touch',
-          ],
-          materials: ['MDF', 'Poplar (face frames)', 'Crown molding'],
-          createdAt: new Date('2024-02-05'),
-          featured: false,
-        },
-        {
-          id: '5',
-          name: 'Kids Playroom Storage',
-          author: 'FamilyBuilder',
-          description: 'Colorful cubby storage system with bins and hooks. Rounded corners for safety.',
-          images: ['/projects/playroom1.jpg'],
-          cabinetType: 'bedroom',
-          style: 'slab',
-          difficulty: 'beginner',
-          estimatedCost: 500,
-          actualCost: 480,
-          buildTime: 20,
-          rating: 4.4,
-          reviewCount: 15,
-          tags: ['kids', 'storage', 'cubbies', 'beginner'],
-          tips: [
-            'Round all corners for child safety',
-            'Use durable, washable paint',
-            'Include label holders for organization',
-          ],
-          materials: ['Birch plywood', 'Fabric bins', 'Plastic label holders'],
-          createdAt: new Date('2024-03-10'),
-          featured: false,
-        },
-        {
-          id: '6',
-          name: 'Rustic Pantry Cabinet',
-          author: 'BarnwoodBob',
-          description: 'Freestanding pantry with distressed finish. Reclaimed barn wood accents and chicken wire door panels.',
-          images: ['/projects/pantry1.jpg', '/projects/pantry1-2.jpg'],
-          cabinetType: 'kitchen',
-          style: 'rustic',
-          difficulty: 'intermediate',
-          estimatedCost: 800,
-          buildTime: 45,
-          rating: 4.7,
-          reviewCount: 22,
-          tags: ['pantry', 'rustic', 'reclaimed', 'freestanding'],
-          tips: [
-            'Distress before final finish',
-            'Use gel stain for even color on pine',
-            'Seal interior for easy cleaning',
-          ],
-          materials: ['Pine plywood', 'Reclaimed barn wood', 'Chicken wire'],
-          createdAt: new Date('2024-01-28'),
-          featured: true,
-        },
-      ];
+const DIFF_COLOR: Record<string, string> = {
+  beginner:     'var(--k-amber-dark)',
+  intermediate: '#f59e0b',
+  advanced:     '#ef4444',
+}
 
-      setProjects(mockProjects);
-      setFilteredProjects(mockProjects);
-      setLoading(false);
-    };
+function Stars({ rating }: { rating: number }) {
+  const full  = Math.floor(rating)
+  const empty = 5 - full
+  return (
+    <span style={{ color: '#f59e0b', fontSize: '12px', letterSpacing: '1px' }}>
+      {'★'.repeat(full)}{'☆'.repeat(empty)}
+    </span>
+  )
+}
 
-    fetchProjects();
-  }, []);
+function PlaceholderImage({ featured }: { featured: boolean }) {
+  return (
+    <div style={{
+      height: 180,
+      background: 'var(--k-surface)',
+      borderBottom: '1px solid var(--k-border)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      position: 'relative',
+    }}>
+      {/* Simple wood grain SVG placeholder */}
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" opacity={0.25}>
+        <rect x="4" y="4" width="40" height="40" rx="2" stroke="var(--k-ink-3)" strokeWidth="1.5"/>
+        <path d="M4 16h40M4 24h40M4 32h40" stroke="var(--k-ink-3)" strokeWidth="1" strokeDasharray="4 3"/>
+        <path d="M16 4v40M32 4v40" stroke="var(--k-ink-3)" strokeWidth="1" strokeDasharray="4 3"/>
+      </svg>
+      {featured && (
+        <div style={{
+          position: 'absolute',
+          top: 10,
+          right: 10,
+          background: 'rgba(6,182,212,0.15)',
+          border: '1px solid rgba(6,182,212,0.35)',
+          color: '#06b6d4',
+          fontSize: '9px',
+          fontWeight: 700,
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          padding: '2px 8px',
+          borderRadius: '2px',
+        }}>
+          Featured
+        </div>
+      )}
+    </div>
+  )
+}
 
-  useEffect(() => {
-    let filtered = [...projects];
+function ProjectDetail({ project, onBack }: { project: GalleryProject; onBack: () => void }) {
+  return (
+    <div>
+      <button
+        onClick={onBack}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          color: 'var(--k-ink-3)',
+          fontSize: '13px',
+          padding: '0 0 24px',
+          fontFamily: 'inherit',
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M9 2L4 7L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+        Back to gallery
+      </button>
 
-    // Apply filters
-    if (searchQuery) {
-      filtered = filtered.filter(p => 
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
-    }
-
-    if (selectedStyle !== 'all') {
-      filtered = filtered.filter(p => p.style === selectedStyle);
-    }
-
-    if (selectedDifficulty !== 'all') {
-      filtered = filtered.filter(p => p.difficulty === selectedDifficulty);
-    }
-
-    if (selectedCabinetType !== 'all') {
-      filtered = filtered.filter(p => p.cabinetType === selectedCabinetType);
-    }
-
-    // Apply sort
-    switch (sortBy) {
-      case 'popular':
-        filtered.sort((a, b) => b.rating * b.reviewCount - a.rating * a.reviewCount);
-        break;
-      case 'recent':
-        filtered.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-        break;
-      case 'cost':
-        filtered.sort((a, b) => a.estimatedCost - b.estimatedCost);
-        break;
-    }
-
-    setFilteredProjects(filtered);
-  }, [searchQuery, selectedStyle, selectedDifficulty, selectedCabinetType, sortBy, projects]);
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'beginner': return 'bg-green-100 text-green-800';
-      case 'intermediate': return 'bg-yellow-100 text-yellow-800';
-      case 'advanced': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const renderStars = (rating: number) => {
-    return '★'.repeat(Math.floor(rating)) + '☆'.repeat(5 - Math.floor(rating));
-  };
-
-  if (selectedProject) {
-    return (
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <button
-          onClick={() => setSelectedProject(null)}
-          className="mb-4 text-blue-600 hover:text-blue-800 flex items-center gap-1"
-        >
-          ← Back to Gallery
-        </button>
-
-        <div className="grid md:grid-cols-2 gap-8">
-          {/* Images */}
-          <div>
-            <div className="bg-gray-200 rounded-lg h-80 flex items-center justify-center">
-              <span className="text-gray-500">📷 Project Images</span>
-            </div>
-            <div className="flex gap-2 mt-2">
-              {selectedProject.images.map((_, i) => (
-                <div key={i} className="w-16 h-16 bg-gray-200 rounded cursor-pointer hover:opacity-80" />
-              ))}
-            </div>
-          </div>
-
-          {/* Details */}
-          <div>
-            <div className="flex items-start justify-between mb-2">
-              <h2 className="text-2xl font-bold">{selectedProject.name}</h2>
-              {selectedProject.featured && (
-                <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-sm font-medium">
-                  ⭐ Featured
-                </span>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-gray-300 rounded-full" />
-              <span className="font-medium">{selectedProject.author}</span>
-            </div>
-
-            <p className="text-gray-600 mb-4">{selectedProject.description}</p>
-
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="bg-gray-50 rounded-lg p-3">
-                <p className="text-sm text-gray-500">Estimated Cost</p>
-                <p className="text-xl font-bold">${selectedProject.estimatedCost}</p>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-3">
-                <p className="text-sm text-gray-500">Build Time</p>
-                <p className="text-xl font-bold">{selectedProject.buildTime} hrs</p>
-              </div>
-            </div>
-
-            <div className="flex gap-2 mb-4">
-              <span className={`px-2 py-1 rounded text-sm ${getDifficultyColor(selectedProject.difficulty)}`}>
-                {selectedProject.difficulty}
-              </span>
-              <span className="px-2 py-1 rounded text-sm bg-blue-100 text-blue-800 capitalize">
-                {selectedProject.style}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-1 text-yellow-500 mb-4">
-              <span>{renderStars(selectedProject.rating)}</span>
-              <span className="text-gray-500 text-sm ml-1">
-                ({selectedProject.reviewCount} reviews)
-              </span>
-            </div>
-
-            <div className="flex flex-wrap gap-2 mb-4">
-              {selectedProject.tags.map((tag) => (
-                <span key={tag} className="px-2 py-1 bg-gray-100 rounded text-sm text-gray-600">
-                  #{tag}
-                </span>
-              ))}
-            </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px' }} className="gallery-detail-grid">
+        {/* Left */}
+        <div>
+          <div style={{
+            height: 300,
+            background: 'var(--k-surface)',
+            border: '1px solid var(--k-border)',
+            borderRadius: '4px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <svg width="64" height="64" viewBox="0 0 48 48" fill="none" opacity={0.2}>
+              <rect x="4" y="4" width="40" height="40" rx="2" stroke="var(--k-ink-3)" strokeWidth="1.5"/>
+              <path d="M4 16h40M4 24h40M4 32h40" stroke="var(--k-ink-3)" strokeWidth="1" strokeDasharray="4 3"/>
+              <path d="M16 4v40M32 4v40" stroke="var(--k-ink-3)" strokeWidth="1" strokeDasharray="4 3"/>
+            </svg>
           </div>
         </div>
 
-        {/* Tips */}
-        <div className="mt-8">
-          <h3 className="text-lg font-semibold mb-3">💡 Tips from {selectedProject.author}</h3>
-          <ul className="space-y-2">
-            {selectedProject.tips.map((tip, i) => (
-              <li key={i} className="flex gap-2 text-gray-600">
-                <span className="text-green-500">✓</span>
+        {/* Right */}
+        <div>
+          {project.featured && (
+            <p className="k-label" style={{ marginBottom: '8px', color: '#06b6d4' }}>Featured Build</p>
+          )}
+          <h2 style={{
+            fontFamily: 'var(--font-sora), Sora, sans-serif',
+            fontSize: '28px', fontWeight: 700, letterSpacing: '-0.03em',
+            color: 'var(--k-ink)', marginBottom: '6px',
+          }}>{project.name}</h2>
+          <p style={{ fontSize: '13px', color: 'var(--k-ink-4)', marginBottom: '16px' }}>
+            by {project.author}
+          </p>
+
+          <p style={{ fontSize: '14px', color: 'var(--k-ink-2)', lineHeight: 1.7, marginBottom: '24px' }}>
+            {project.description}
+          </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '24px' }}>
+            {[
+              { label: 'Est. Cost', value: `$${project.estimatedCost.toLocaleString()}` },
+              { label: 'Build Time', value: `${project.buildTime} hrs` },
+              { label: 'Difficulty', value: project.difficulty },
+            ].map(({ label, value }) => (
+              <div key={label} style={{
+                background: 'var(--k-surface)',
+                border: '1px solid var(--k-border)',
+                borderRadius: '4px',
+                padding: '12px 14px',
+              }}>
+                <p style={{ fontSize: '10px', color: 'var(--k-ink-4)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '4px' }}>{label}</p>
+                <p style={{
+                  fontSize: '16px', fontWeight: 600, color:
+                    label === 'Difficulty' ? DIFF_COLOR[project.difficulty] : 'var(--k-ink)',
+                  textTransform: label === 'Difficulty' ? 'capitalize' : undefined,
+                }}>{value}</p>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+            <Stars rating={project.rating} />
+            <span style={{ fontSize: '12px', color: 'var(--k-ink-4)' }}>{project.rating} ({project.reviewCount} reviews)</span>
+          </div>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+            {project.tags.map(tag => (
+              <span key={tag} style={{
+                fontSize: '11px', color: 'var(--k-ink-3)',
+                background: 'var(--k-surface)',
+                border: '1px solid var(--k-border)',
+                borderRadius: '2px',
+                padding: '2px 8px',
+              }}>#{tag}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Tips */}
+      <div style={{ marginTop: '40px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }} className="gallery-detail-grid">
+        <div>
+          <p style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--k-ink-4)', marginBottom: '16px' }}>
+            Tips from {project.author}
+          </p>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            {project.tips.map((tip, i) => (
+              <li key={i} style={{ display: 'flex', gap: '10px', marginBottom: '10px', fontSize: '13px', color: 'var(--k-ink-2)', lineHeight: 1.6 }}>
+                <span style={{
+                  width: 16, height: 16, borderRadius: '50%', flexShrink: 0, marginTop: '2px',
+                  background: 'rgba(6,182,212,0.12)',
+                  border: '1px solid rgba(6,182,212,0.25)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                    <path d="M1 4L3 6.5L7 1.5" stroke="#06b6d4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </span>
                 {tip}
               </li>
             ))}
           </ul>
         </div>
 
-        {/* Materials */}
-        <div className="mt-6">
-          <h3 className="text-lg font-semibold mb-3">📦 Materials Used</h3>
-          <div className="flex flex-wrap gap-2">
-            {selectedProject.materials.map((material) => (
-              <span key={material} className="px-3 py-1 border rounded-full text-sm">
-                {material}
-              </span>
+        <div>
+          <p style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--k-ink-4)', marginBottom: '16px' }}>
+            Materials
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            {project.materials.map(m => (
+              <span key={m} style={{
+                fontSize: '12px',
+                color: 'var(--k-ink-2)',
+                background: 'var(--k-surface)',
+                border: '1px solid var(--k-border)',
+                borderRadius: '3px',
+                padding: '4px 10px',
+              }}>{m}</span>
             ))}
           </div>
         </div>
-
-        <button
-          onClick={() => onSelectProject?.(selectedProject)}
-          className="mt-6 w-full py-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600"
-        >
-          Use This Design as Template
-        </button>
       </div>
-    );
+    </div>
+  )
+}
+
+function FilterSelect({ label, value, options, onChange }: {
+  label: string
+  value: string
+  options: string[]
+  onChange: (v: string) => void
+}) {
+  return (
+    <div>
+      <label style={{ fontSize: '10px', color: 'var(--k-ink-4)', letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>
+        {label}
+      </label>
+      <select
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        style={{
+          background: 'var(--k-surface)',
+          border: '1px solid var(--k-border)',
+          borderRadius: '3px',
+          color: 'var(--k-ink-2)',
+          fontSize: '12px',
+          padding: '6px 28px 6px 10px',
+          cursor: 'pointer',
+          fontFamily: 'inherit',
+          appearance: 'none',
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23666' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E")`,
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'right 8px center',
+        }}
+      >
+        {options.map(o => (
+          <option key={o} value={o}>
+            {o === 'all' ? `All ${label}s` : o.replace('-', ' ')}
+          </option>
+        ))}
+      </select>
+    </div>
+  )
+}
+
+export default function CommunityGallery() {
+  const [selected, setSelected] = useState<GalleryProject | null>(null)
+  const [search, setSearch] = useState('')
+  const [style, setStyle] = useState('all')
+  const [difficulty, setDifficulty] = useState('all')
+  const [room, setRoom] = useState('all')
+  const [sort, setSort] = useState<'popular' | 'recent' | 'cost'>('popular')
+
+  const filtered = useMemo(() => {
+    let list = [...MOCK_PROJECTS]
+    if (search) {
+      const q = search.toLowerCase()
+      list = list.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q) ||
+        p.tags.some(t => t.toLowerCase().includes(q))
+      )
+    }
+    if (style !== 'all') list = list.filter(p => p.style === style)
+    if (difficulty !== 'all') list = list.filter(p => p.difficulty === difficulty)
+    if (room !== 'all') list = list.filter(p => p.cabinetType === room)
+
+    switch (sort) {
+      case 'popular': list.sort((a, b) => b.rating * b.reviewCount - a.rating * a.reviewCount); break
+      case 'recent':  list.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()); break
+      case 'cost':    list.sort((a, b) => a.estimatedCost - b.estimatedCost); break
+    }
+    return list
+  }, [search, style, difficulty, room, sort])
+
+  if (selected) {
+    return <ProjectDetail project={selected} onBack={() => setSelected(null)} />
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
-      <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-        <span className="text-3xl">🏠</span>
-        Community Build Gallery
-      </h2>
-
-      <p className="text-gray-600 mb-6">
-        Browse designs others have actually built. Learn from real experiences.
-      </p>
-
-      {/* Filters */}
-      <div className="space-y-4 mb-6">
+    <div>
+      {/* Filters row */}
+      <div style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: '16px',
+        alignItems: 'flex-end',
+        marginBottom: '32px',
+        paddingBottom: '24px',
+        borderBottom: '1px solid var(--k-border)',
+      }}>
         {/* Search */}
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Search projects, tags, or styles..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-4 py-2 pl-10 border rounded-lg focus:ring-2 focus:ring-blue-500"
-          />
-          <span className="absolute left-3 top-2.5 text-gray-400">🔍</span>
+        <div style={{ flex: '1 1 200px' }}>
+          <label style={{ fontSize: '10px', color: 'var(--k-ink-4)', letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>
+            Search
+          </label>
+          <div style={{ position: 'relative' }}>
+            <input
+              type="text"
+              placeholder="Kitchen, garage, shaker..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={{
+                width: '100%',
+                background: 'var(--k-surface)',
+                border: '1px solid var(--k-border)',
+                borderRadius: '3px',
+                color: 'var(--k-ink)',
+                fontSize: '12px',
+                padding: '6px 10px 6px 30px',
+                fontFamily: 'inherit',
+                boxSizing: 'border-box',
+              }}
+            />
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
+              style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', opacity: 0.4 }}>
+              <circle cx="5" cy="5" r="4" stroke="var(--k-ink)" strokeWidth="1.5"/>
+              <path d="M8 8L11 11" stroke="var(--k-ink)" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          </div>
         </div>
 
-        {/* Filter Buttons */}
-        <div className="flex flex-wrap gap-4">
-          <div>
-            <label className="text-sm text-gray-500 block mb-1">Style</label>
-            <select
-              value={selectedStyle}
-              onChange={(e) => setSelectedStyle(e.target.value)}
-              className="border rounded px-3 py-1.5 text-sm"
-            >
-              {styles.map((s) => (
-                <option key={s} value={s}>{s === 'all' ? 'All Styles' : s}</option>
-              ))}
-            </select>
-          </div>
+        <FilterSelect label="Style"      value={style}      options={STYLES} onChange={setStyle} />
+        <FilterSelect label="Difficulty" value={difficulty} options={DIFFS}  onChange={setDifficulty} />
+        <FilterSelect label="Room"       value={room}       options={ROOMS}  onChange={setRoom} />
 
-          <div>
-            <label className="text-sm text-gray-500 block mb-1">Difficulty</label>
-            <select
-              value={selectedDifficulty}
-              onChange={(e) => setSelectedDifficulty(e.target.value)}
-              className="border rounded px-3 py-1.5 text-sm"
-            >
-              {difficulties.map((d) => (
-                <option key={d} value={d}>{d === 'all' ? 'All Levels' : d}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="text-sm text-gray-500 block mb-1">Room</label>
-            <select
-              value={selectedCabinetType}
-              onChange={(e) => setSelectedCabinetType(e.target.value)}
-              className="border rounded px-3 py-1.5 text-sm"
-            >
-              {cabinetTypes.map((t) => (
-                <option key={t} value={t}>{t === 'all' ? 'All Rooms' : t}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="text-sm text-gray-500 block mb-1">Sort By</label>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
-              className="border rounded px-3 py-1.5 text-sm"
-            >
-              <option value="popular">Most Popular</option>
-              <option value="recent">Most Recent</option>
-              <option value="cost">Lowest Cost</option>
-            </select>
+        <div>
+          <label style={{ fontSize: '10px', color: 'var(--k-ink-4)', letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>
+            Sort
+          </label>
+          <div style={{ display: 'flex', gap: '4px' }}>
+            {(['popular', 'recent', 'cost'] as const).map(s => (
+              <button
+                key={s}
+                onClick={() => setSort(s)}
+                style={{
+                  padding: '6px 10px',
+                  fontSize: '11px',
+                  fontWeight: 500,
+                  background: sort === s ? 'var(--k-ink)' : 'var(--k-surface)',
+                  color: sort === s ? '#f5f0eb' : 'var(--k-ink-3)',
+                  border: '1px solid var(--k-border)',
+                  borderRadius: '3px',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  textTransform: 'capitalize',
+                }}
+              >
+                {s}
+              </button>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Projects Grid */}
-      {loading ? (
-        <div className="text-center py-12">
-          <p className="text-gray-500">Loading projects...</p>
-        </div>
-      ) : filteredProjects.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-500">No projects match your filters.</p>
+      {/* Count */}
+      <p style={{ fontSize: '12px', color: 'var(--k-ink-4)', marginBottom: '20px' }}>
+        {filtered.length} build{filtered.length !== 1 ? 's' : ''}
+      </p>
+
+      {/* Grid */}
+      {filtered.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '64px 0', color: 'var(--k-ink-4)', fontSize: '14px' }}>
+          No builds match your filters.
         </div>
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredProjects.map((project) => (
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: '12px',
+        }} className="gallery-grid">
+          {filtered.map(project => (
             <div
               key={project.id}
-              onClick={() => setSelectedProject(project)}
-              className="border rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition"
+              onClick={() => setSelected(project)}
+              style={{
+                background: 'var(--k-bg)',
+                border: '1px solid var(--k-border)',
+                borderRadius: '4px',
+                overflow: 'hidden',
+                cursor: 'pointer',
+                transition: 'border-color 150ms',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(6,182,212,0.3)')}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--k-border)')}
             >
-              <div className="h-40 bg-gray-200 flex items-center justify-center">
-                {project.featured && (
-                  <span className="absolute top-2 right-2 bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded text-xs font-medium">
-                    Featured
-                  </span>
-                )}
-                <span className="text-gray-400">📷</span>
-              </div>
+              <PlaceholderImage featured={project.featured} />
 
-              <div className="p-4">
-                <h3 className="font-semibold mb-1">{project.name}</h3>
-                <p className="text-sm text-gray-500 mb-2">by {project.author}</p>
+              <div style={{ padding: '16px 18px 18px' }}>
+                <p style={{
+                  fontSize: '14px', fontWeight: 600, color: 'var(--k-ink)',
+                  marginBottom: '4px', lineHeight: 1.3,
+                }}>{project.name}</p>
+                <p style={{ fontSize: '11px', color: 'var(--k-ink-4)', marginBottom: '10px' }}>by {project.author}</p>
 
-                <div className="flex items-center gap-1 text-yellow-500 text-sm mb-2">
-                  <span>{renderStars(project.rating)}</span>
-                  <span className="text-gray-400">({project.reviewCount})</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
+                  <Stars rating={project.rating} />
+                  <span style={{ fontSize: '11px', color: 'var(--k-ink-4)' }}>({project.reviewCount})</span>
                 </div>
 
-                <div className="flex justify-between items-center text-sm">
-                  <span className={`px-2 py-0.5 rounded ${getDifficultyColor(project.difficulty)}`}>
-                    {project.difficulty}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <span style={{
+                    fontSize: '10px', fontWeight: 600, textTransform: 'capitalize',
+                    color: DIFF_COLOR[project.difficulty],
+                  }}>{project.difficulty}</span>
+                  <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--k-ink)' }}>
+                    ${project.estimatedCost.toLocaleString()}
                   </span>
-                  <span className="font-semibold">${project.estimatedCost}</span>
                 </div>
 
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {project.tags.slice(0, 3).map((tag) => (
-                    <span key={tag} className="text-xs text-gray-500">#{tag}</span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                  {project.tags.slice(0, 3).map(tag => (
+                    <span key={tag} style={{
+                      fontSize: '10px', color: 'var(--k-ink-4)',
+                    }}>#{tag}</span>
                   ))}
                 </div>
               </div>
@@ -502,8 +586,16 @@ const CommunityGallery: React.FC<CommunityGalleryProps> = ({ onSelectProject }) 
           ))}
         </div>
       )}
-    </div>
-  );
-};
 
-export default CommunityGallery;
+      <style>{`
+        @media (max-width: 900px) {
+          .gallery-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .gallery-detail-grid { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 600px) {
+          .gallery-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+    </div>
+  )
+}
