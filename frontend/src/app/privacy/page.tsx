@@ -1,107 +1,110 @@
 import { Metadata } from 'next'
+import { LegalShell, LegalSection, LegalHighlight, LegalCardGrid, LegalCard, LegalFooter } from '@/components/LegalShell'
 
 export const metadata: Metadata = {
   title: 'Privacy Policy | KerfOS',
-  description: 'KerfOS privacy policy - How we collect, use, and protect your data.',
+  description: 'KerfOS privacy policy — how we collect, use, and protect your data.',
+}
+
+async function getPolicy() {
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/gdpr/privacy-policy`,
+      { cache: 'no-store', signal: AbortSignal.timeout(4000) }
+    )
+    if (!response.ok) return null
+    return await response.json()
+  } catch {
+    return null
+  }
 }
 
 export default async function PrivacyPage() {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/gdpr/privacy-policy`, {
-    cache: 'no-store',
-  })
-  const policy = await response.json()
+  const policy = await getPolicy()
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-lg shadow-sm p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{policy.title}</h1>
-          <p className="text-sm text-gray-500 mb-8">
-            Last updated: {policy.last_updated} | Version {policy.version}
+    <LegalShell
+      title="Privacy Policy"
+      badge={policy?.version ? `v${policy.version}` : 'v1.0'}
+      subtitle={policy?.last_updated ? `Last updated ${policy.last_updated}` : 'Last updated March 2026'}
+    >
+      {/* Summary cards */}
+      <LegalCardGrid>
+        <LegalCard label="Data Controller">KerfOS / Modology Studios</LegalCard>
+        <LegalCard label="Contact">privacy@kerfos.com</LegalCard>
+        <LegalCard label="GDPR Compliant">Yes</LegalCard>
+        <LegalCard label="CCPA Compliant">Yes</LegalCard>
+      </LegalCardGrid>
+
+      {/* Dynamic sections from API, or static fallback */}
+      {policy?.sections?.map((section: { title: string; content: string }, i: number) => (
+        <LegalSection key={i} title={section.title}>
+          <p style={{ fontSize: '14px', color: 'var(--k-ink-3)', lineHeight: 1.75 }}>
+            {section.content}
           </p>
+        </LegalSection>
+      )) ?? (
+        <>
+          <LegalSection title="1. Who We Are">
+            <p style={{ fontSize: '14px', color: 'var(--k-ink-3)', lineHeight: 1.75 }}>
+              KerfOS is a cabinet design software platform. Our contact: privacy@kerfos.com.
+              Data Protection Officer: dpo@kerfos.com.
+            </p>
+          </LegalSection>
+          <LegalSection title="2. Data We Collect">
+            <p style={{ fontSize: '14px', color: 'var(--k-ink-3)', lineHeight: 1.75 }}>
+              We collect account data (name, email), design data (cabinet projects, cut lists),
+              and usage analytics to improve the product. We do not sell your data.
+            </p>
+          </LegalSection>
+          <LegalSection title="3. How We Use Your Data">
+            <p style={{ fontSize: '14px', color: 'var(--k-ink-3)', lineHeight: 1.75 }}>
+              Your data is used to provide the KerfOS service, send transactional emails,
+              process payments via Stripe, and improve our product. We do not use your designs
+              to train AI models without explicit opt-in consent.
+            </p>
+          </LegalSection>
+          <LegalSection title="4. Data Retention">
+            <p style={{ fontSize: '14px', color: 'var(--k-ink-3)', lineHeight: 1.75 }}>
+              Account data is retained while your account is active and for 30 days after deletion.
+              You can request export or deletion at any time via our GDPR portal.
+            </p>
+          </LegalSection>
+        </>
+      )}
 
-          <div className="prose prose-blue max-w-none">
-            {/* Summary */}
-            <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-8">
-              <h2 className="text-lg font-semibold text-blue-900 mb-2">Summary</h2>
-              <dl className="grid grid-cols-1 gap-2 text-sm">
-                <div className="flex justify-between">
-                  <dt className="font-medium text-blue-900">Data Controller:</dt>
-                  <dd className="text-blue-700">{policy.summary?.data_controller}</dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="font-medium text-blue-900">Contact:</dt>
-                  <dd className="text-blue-700">{policy.summary?.contact_email}</dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="font-medium text-blue-900">Data Protection Officer:</dt>
-                  <dd className="text-blue-700">{policy.summary?.dpo_email}</dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="font-medium text-blue-900">GDPR Compliant:</dt>
-                  <dd className="text-blue-700">{policy.summary?.gdpr_compliant ? '✓ Yes' : '✗ No'}</dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="font-medium text-blue-900">CCPA Compliant:</dt>
-                  <dd className="text-blue-700">{policy.summary?.ccpa_compliant ? '✓ Yes' : '✗ No'}</dd>
-                </div>
-              </dl>
+      {/* Rights */}
+      <LegalSection title="Your Rights">
+        <LegalHighlight variant="accent">
+          You have the right to access, correct, export, and delete your data at any time.
+          Use our <a href="/gdpr" style={{ color: 'var(--k-amber)', textDecoration: 'none' }}>GDPR portal</a> to exercise these rights.
+        </LegalHighlight>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+          gap: '8px',
+        }}>
+          {['Access your data', 'Correct your data', 'Delete your data', 'Export your data',
+            'Withdraw consent', 'Object to processing'].map(right => (
+            <div key={right} style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontSize: '13px',
+              color: 'var(--k-ink-3)',
+              padding: '10px 12px',
+              background: 'var(--k-bg-subtle)',
+              border: '1px solid var(--k-border)',
+              borderRadius: 'var(--k-r-sm)',
+            }}>
+              <span style={{ color: 'var(--k-amber)', fontWeight: 600 }}>✓</span>
+              {right}
             </div>
-
-            {/* Sections */}
-            {policy.sections?.map((section: { title: string; content: string }, index: number) => (
-              <div key={index} className="mb-8">
-                <h2 className="text-xl font-semibold text-gray-900 mb-3">{section.title}</h2>
-                <p className="text-gray-600 leading-relaxed">{section.content}</p>
-              </div>
-            ))}
-
-            {/* Your Rights */}
-            <div className="bg-gray-50 rounded-lg p-6 mb-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Rights</h2>
-              <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600">
-                <li className="flex items-center gap-2">
-                  <span className="text-green-500">✓</span>
-                  Right to access your data
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-green-500">✓</span>
-                  Right to correct your data
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-green-500">✓</span>
-                  Right to delete your data
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-green-500">✓</span>
-                  Right to export your data
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-green-500">✓</span>
-                  Right to withdraw consent
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-green-500">✓</span>
-                  Right to object to processing
-                </li>
-              </ul>
-            </div>
-
-            {/* Contact */}
-            <div className="border-t pt-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Contact Us</h2>
-              <p className="text-gray-600 mb-4">
-                If you have any questions about this privacy policy or our data practices, 
-                please contact us at:
-              </p>
-              <div className="space-y-2 text-sm">
-                <p><strong>Email:</strong> {policy.summary?.contact_email || 'privacy@kerfos.com'}</p>
-                <p><strong>Data Protection Officer:</strong> {policy.summary?.dpo_email || 'dpo@kerfos.com'}</p>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
-      </div>
-    </div>
+      </LegalSection>
+
+      <LegalFooter />
+    </LegalShell>
   )
 }

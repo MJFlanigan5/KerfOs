@@ -1,804 +1,472 @@
-// @ts-nocheck
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Card,
-  CardContent,
-  CardMedia,
-  Typography,
-  Grid,
-  Chip,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  TextField,
-  InputAdornment,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Divider,
-  IconButton,
-  Tooltip,
-  Alert,
-} from '@mui/material';
-import {
-  Search as SearchIcon,
-  ExpandMore as ExpandMoreIcon,
-  Carpenter as CarpenterIcon,
-  Kitchen as KitchenIcon,
-  Bathtub as BathtubIcon,
-  MenuBook as BookIcon,
-  Tv as TvIcon,
-  Garage as GarageIcon,
-  LocalLaundryService as LaundryIcon,
-  Chair as ChairIcon,
-  Home as HomeIcon,
-  AccessTime as TimeIcon,
-  AttachMoney as MoneyIcon,
-  Build as BuildIcon,
-  Info as InfoIcon,
-  ShoppingCart as CartIcon,
-  ContentCopy as CopyIcon,
-  GetApp as DownloadIcon,
-} from '@mui/icons-material';
+import { useState, useEffect } from 'react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
-// Style colors
-const STYLE_COLORS = {
-  shaker: '#8B4513',
-  flat_panel: '#2F4F4F',
-  raised_panel: '#8B0000',
-  slab: '#4682B4',
-  beadboard: '#D2691E',
-  louvered: '#556B2F',
-  glass_front: '#708090',
-  open_shelf: '#A0522D',
-  barn_door: '#6B4423',
-};
+interface TemplateChange {
+  name: string;
+  quantity: number;
+  width: number;
+  height: number;
+  depth: number;
+  material: string;
+}
 
-// Difficulty colors
-const DIFFICULTY_COLORS = {
-  beginner: '#4CAF50',
-  intermediate: '#FF9800',
-  advanced: '#F44336',
-};
+interface HardwareItem {
+  name: string;
+  quantity: number;
+  type: string;
+}
 
-// Room icons
-const ROOM_ICONS = {
-  kitchen: KitchenIcon,
-  bathroom: BathtubIcon,
-  laundry: LaundryIcon,
-  office: ChairIcon,
-  living_room: HomeIcon,
-  bedroom: ChairIcon,
-  garage: GarageIcon,
-  pantry: KitchenIcon,
-  mudroom: HomeIcon,
-  entertainment: TvIcon,
-};
+interface Template {
+  id: string;
+  name: string;
+  description: string;
+  style: string;
+  room_type: string;
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  estimated_hours: number;
+  estimated_cost_low: number;
+  estimated_cost_high: number;
+  tags: string[];
+  inspiration: string;
+  inspiration_notes?: string;
+  components: TemplateChange[];
+  hardware_needed: HardwareItem[];
+  joinery: string[];
+  finishing_suggestions: string[];
+}
 
-// Inspiration avatars
-const INSPIRATION_AVATARS = {
-  steve_ramsey: '🧔',
-  april_wilkerson: '👩‍🔧',
-  jon_peters: '👨‍🔧',
-  marc_spagnuolo: '🧔‍♂���',
-  jay_bates: '👨‍🔧',
-  john_heisz: '👴',
-  matt_cremona: '👨',
-  frank_howarth: '🎬',
-  patrick_sorrell: '🛠️',
-  lexspeed: '⚡',
-  cabinets_to_go: '🏪',
-  cliffside_cabinets: '🏚️',
-  barker_door: '🚪',
-  conestoga: '🛒',
-  decora: '✨',
-  kraftmaid: '🏡',
-  custom: '🎨',
-};
+interface CutlistData {
+  template_name: string;
+  summary: {
+    total_components: number;
+    estimated_3_4_sheets: number;
+    total_lumber_board_feet: number;
+    estimated_cost_range: string;
+  };
+  cut_list: Array<{ sheet?: string; lumber?: string; pieces?: number; waste_pct?: number; board_feet?: number }>;
+  hardware_needed: HardwareItem[];
+  joinery: string[];
+  finishing: string[];
+}
+
+const DIFFICULTY_COLOR: Record<string, string> = {
+  beginner:     '#22c55e',
+  intermediate: 'var(--k-amber)',
+  advanced:     '#ef4444',
+}
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '8px 11px',
+  background: 'var(--k-surface)',
+  border: '1px solid var(--k-border-mid)',
+  borderRadius: 'var(--k-r-md)',
+  fontSize: '13px',
+  color: 'var(--k-ink)',
+  fontFamily: 'var(--font-inter), system-ui, sans-serif',
+  outline: 'none',
+  boxSizing: 'border-box' as const,
+}
+
+const selectStyle: React.CSSProperties = {
+  ...inputStyle,
+  cursor: 'pointer',
+  width: 'auto',
+}
+
+function Pill({ children, color }: { children: React.ReactNode; color?: string }) {
+  return (
+    <span style={{
+      fontSize: '10px',
+      fontFamily: 'var(--font-mono), monospace',
+      fontWeight: 500,
+      letterSpacing: '0.06em',
+      textTransform: 'uppercase',
+      color: color || 'var(--k-ink-3)',
+      border: `1px solid ${color ? color + '55' : 'var(--k-border)'}`,
+      padding: '2px 7px',
+      borderRadius: 'var(--k-r-sm)',
+      display: 'inline-block',
+    }}>
+      {children}
+    </span>
+  )
+}
+
+function Modal({ open, onClose, children }: { open: boolean; onClose: () => void; children: React.ReactNode }) {
+  if (!open) return null
+  return (
+    <div
+      onClick={onClose}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{ background: 'var(--k-bg)', border: '1px solid var(--k-border)', borderRadius: 'var(--k-r-lg)', width: '100%', maxWidth: '720px', maxHeight: '85vh', overflowY: 'auto' }}
+      >
+        {children}
+      </div>
+    </div>
+  )
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div style={{ borderTop: '1px solid var(--k-border)' }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--k-ink)', fontSize: '13px', fontWeight: 600 }}
+      >
+        {title}
+        <span style={{ fontSize: '11px', color: 'var(--k-ink-4)', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 150ms ease' }}>▾</span>
+      </button>
+      {open && <div style={{ paddingBottom: '16px' }}>{children}</div>}
+    </div>
+  )
+}
 
 export default function TemplateGallery() {
-  const [templates, setTemplates] = useState([]);
-  const [filteredTemplates, setFilteredTemplates] = useState([]);
-  const [styles, setStyles] = useState([]);
-  const [rooms, setRooms] = useState([]);
-  const [inspirations, setInspirations] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [detailsOpen, setDetailsOpen] = useState(false);
-  const [cutlistOpen, setCutlistOpen] = useState(false);
-  const [cutlistData, setCutlistData] = useState(null);
-  
-  // Filters
-  const [searchQuery, setSearchQuery] = useState('');
-  const [styleFilter, setStyleFilter] = useState('');
-  const [roomFilter, setRoomFilter] = useState('');
-  const [difficultyFilter, setDifficultyFilter] = useState('');
-  const [inspirationFilter, setInspirationFilter] = useState('');
+  const [templates, setTemplates] = useState<Template[]>([])
+  const [filteredTemplates, setFilteredTemplates] = useState<Template[]>([])
+  const [styles, setStyles] = useState<Array<{ value: string; label: string }>>([])
+  const [rooms, setRooms] = useState<Array<{ value: string; label: string }>>([])
+  const [loading, setLoading] = useState(true)
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null)
+  const [detailsOpen, setDetailsOpen] = useState(false)
+  const [cutlistOpen, setCutlistOpen] = useState(false)
+  const [cutlistData, setCutlistData] = useState<CutlistData | null>(null)
+
+  const [searchQuery, setSearchQuery]       = useState('')
+  const [styleFilter, setStyleFilter]       = useState('')
+  const [roomFilter, setRoomFilter]         = useState('')
+  const [difficultyFilter, setDifficultyFilter] = useState('')
+
+  useEffect(() => { fetchTemplates(); fetchFilters() }, [])
 
   useEffect(() => {
-    fetchTemplates();
-    fetchFilters();
-  }, []);
-
-  useEffect(() => {
-    filterTemplates();
-  }, [templates, searchQuery, styleFilter, roomFilter, difficultyFilter, inspirationFilter]);
+    let filtered = [...templates]
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase()
+      filtered = filtered.filter(t =>
+        t.name.toLowerCase().includes(q) ||
+        t.description.toLowerCase().includes(q) ||
+        t.tags.some(tag => tag.toLowerCase().includes(q))
+      )
+    }
+    if (styleFilter)      filtered = filtered.filter(t => t.style === styleFilter)
+    if (roomFilter)       filtered = filtered.filter(t => t.room_type === roomFilter)
+    if (difficultyFilter) filtered = filtered.filter(t => t.difficulty === difficultyFilter)
+    setFilteredTemplates(filtered)
+  }, [templates, searchQuery, styleFilter, roomFilter, difficultyFilter])
 
   const fetchTemplates = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/templates/`);
-      const data = await response.json();
-      setTemplates(data);
-      setFilteredTemplates(data);
-    } catch (error) {
-      console.error('Error fetching templates:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      const res = await fetch(`${API_URL}/api/templates/`)
+      const data = await res.json()
+      setTemplates(data)
+      setFilteredTemplates(data)
+    } catch { /* silent */ } finally { setLoading(false) }
+  }
 
   const fetchFilters = async () => {
     try {
-      const [stylesRes, roomsRes, inspirationsRes] = await Promise.all([
+      const [sRes, rRes] = await Promise.all([
         fetch(`${API_URL}/api/templates/styles`),
         fetch(`${API_URL}/api/templates/rooms`),
-        fetch(`${API_URL}/api/templates/inspirations`),
-      ]);
-      setStyles(await stylesRes.json());
-      setRooms(await roomsRes.json());
-      setInspirations(await inspirationsRes.json());
-    } catch (error) {
-      console.error('Error fetching filters:', error);
-    }
-  };
+      ])
+      setStyles(await sRes.json())
+      setRooms(await rRes.json())
+    } catch { /* silent */ }
+  }
 
-  const filterTemplates = () => {
-    let filtered = [...templates];
-
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (t) =>
-          t.name.toLowerCase().includes(query) ||
-          t.description.toLowerCase().includes(query) ||
-          t.tags.some((tag) => tag.toLowerCase().includes(query))
-      );
-    }
-
-    if (styleFilter) {
-      filtered = filtered.filter((t) => t.style === styleFilter);
-    }
-
-    if (roomFilter) {
-      filtered = filtered.filter((t) => t.room_type === roomFilter);
-    }
-
-    if (difficultyFilter) {
-      filtered = filtered.filter((t) => t.difficulty === difficultyFilter);
-    }
-
-    if (inspirationFilter) {
-      filtered = filtered.filter((t) => t.inspiration === inspirationFilter);
-    }
-
-    setFilteredTemplates(filtered);
-  };
-
-  const handleViewDetails = (template) => {
-    setSelectedTemplate(template);
-    setDetailsOpen(true);
-  };
-
-  const handleViewCutlist = async (template) => {
-    setSelectedTemplate(template);
+  const handleViewCutlist = async (template: Template) => {
+    setSelectedTemplate(template)
     try {
-      const response = await fetch(`${API_URL}/api/templates/${template.id}/cutlist`);
-      const data = await response.json();
-      setCutlistData(data);
-      setCutlistOpen(true);
-    } catch (error) {
-      console.error('Error fetching cutlist:', error);
-    }
-  };
+      const res = await fetch(`${API_URL}/api/templates/${template.id}/cutlist`)
+      setCutlistData(await res.json())
+      setCutlistOpen(true)
+    } catch { /* silent */ }
+  }
 
-  const handleUseTemplate = async (template) => {
-    // TODO: Create a new project from template
-    console.log('Creating project from template:', template.id);
-    alert(`Project creation from template "${template.name}" coming soon!`);
-  };
-
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-  };
+  const handleUseTemplate = (template: Template) => {
+    alert(`Project creation from template "${template.name}" coming soon!`)
+  }
 
   const clearFilters = () => {
-    setSearchQuery('');
-    setStyleFilter('');
-    setRoomFilter('');
-    setDifficultyFilter('');
-    setInspirationFilter('');
-  };
+    setSearchQuery(''); setStyleFilter(''); setRoomFilter(''); setDifficultyFilter('')
+  }
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-        <Typography>Loading templates...</Typography>
-      </Box>
-    );
+      <div style={{ display: 'flex', justifyContent: 'center', padding: '48px', color: 'var(--k-ink-4)', fontSize: '14px' }}>
+        Loading templates...
+      </div>
+    )
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      {/* Header */}
-      <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>
-        🪵 Project Templates
-      </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-        Pre-built cabinet designs inspired by popular YouTube woodworkers and high-end cabinet manufacturers
-      </Typography>
-
+    <div>
       {/* Filters */}
-      <Card sx={{ mb: 3, p: 2 }}>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={4}>
-            <TextField
-              fullWidth
-              placeholder="Search templates..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </Grid>
-          <Grid item xs={6} md={2}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Style</InputLabel>
-              <Select
-                value={styleFilter}
-                label="Style"
-                onChange={(e) => setStyleFilter(e.target.value)}
-              >
-                <MenuItem value="">All Styles</MenuItem>
-                {styles.map((s) => (
-                  <MenuItem key={s.value} value={s.value}>
-                    {s.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={6} md={2}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Room</InputLabel>
-              <Select
-                value={roomFilter}
-                label="Room"
-                onChange={(e) => setRoomFilter(e.target.value)}
-              >
-                <MenuItem value="">All Rooms</MenuItem>
-                {rooms.map((r) => (
-                  <MenuItem key={r.value} value={r.value}>
-                    {r.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={6} md={2}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Difficulty</InputLabel>
-              <Select
-                value={difficultyFilter}
-                label="Difficulty"
-                onChange={(e) => setDifficultyFilter(e.target.value)}
-              >
-                <MenuItem value="">All Levels</MenuItem>
-                <MenuItem value="beginner">Beginner</MenuItem>
-                <MenuItem value="intermediate">Intermediate</MenuItem>
-                <MenuItem value="advanced">Advanced</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={6} md={2}>
-            <Button variant="outlined" onClick={clearFilters} fullWidth>
-              Clear Filters
-            </Button>
-          </Grid>
-        </Grid>
-      </Card>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '20px', alignItems: 'flex-end' }}>
+        <input
+          style={{ ...inputStyle, flex: '1 1 200px', minWidth: '160px' }}
+          placeholder="Search templates..."
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+        />
+        <select style={selectStyle} value={styleFilter} onChange={e => setStyleFilter(e.target.value)}>
+          <option value="">All Styles</option>
+          {styles.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+        </select>
+        <select style={selectStyle} value={roomFilter} onChange={e => setRoomFilter(e.target.value)}>
+          <option value="">All Rooms</option>
+          {rooms.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+        </select>
+        <select style={selectStyle} value={difficultyFilter} onChange={e => setDifficultyFilter(e.target.value)}>
+          <option value="">All Levels</option>
+          <option value="beginner">Beginner</option>
+          <option value="intermediate">Intermediate</option>
+          <option value="advanced">Advanced</option>
+        </select>
+        {(searchQuery || styleFilter || roomFilter || difficultyFilter) && (
+          <button onClick={clearFilters} style={{ ...selectStyle, color: 'var(--k-ink-4)', fontSize: '12px' }}>
+            Clear
+          </button>
+        )}
+      </div>
 
-      {/* Results count */}
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Showing {filteredTemplates.length} of {templates.length} templates
-      </Typography>
+      <div style={{ fontSize: '12px', color: 'var(--k-ink-4)', marginBottom: '16px', fontFamily: 'var(--font-mono), monospace' }}>
+        {filteredTemplates.length} of {templates.length} templates
+      </div>
 
-      {/* Template Grid */}
-      <Grid container spacing={3}>
-        {filteredTemplates.map((template) => {
-          const RoomIcon = ROOM_ICONS[template.room_type] || CarpenterIcon;
-          return (
-            <Grid item xs={12} sm={6} md={4} key={template.id}>
-              <Card
-                sx={{
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  transition: 'transform 0.2s, box-shadow 0.2s',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: 4,
-                  },
-                }}
-              >
-                {/* Header with style color */}
-                <Box
-                  sx={{
-                    height: 8,
-                    bgcolor: STYLE_COLORS[template.style] || '#8B4513',
-                  }}
-                />
-                <CardContent sx={{ flexGrow: 1 }}>
-                  {/* Title and Inspiration */}
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                    <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
-                      {template.name}
-                    </Typography>
-                    <Tooltip title={`Inspired by ${template.inspiration.replace('_', ' ')}`}>
-                      <Typography variant="h5">
-                        {INSPIRATION_AVATARS[template.inspiration] || '🛠️'}
-                      </Typography>
-                    </Tooltip>
-                  </Box>
+      {/* Grid */}
+      {filteredTemplates.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '64px', color: 'var(--k-ink-4)', fontSize: '14px' }}>
+          No templates match your filters.
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+          {filteredTemplates.map(template => (
+            <div key={template.id} style={{ border: '1px solid var(--k-border)', borderRadius: 'var(--k-r-lg)', background: 'var(--k-surface)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+              {/* Style color strip */}
+              <div style={{ height: '3px', background: 'var(--k-amber)' }} />
 
-                  {/* Description */}
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2, minHeight: 40 }}>
-                    {template.description.substring(0, 100)}...
-                  </Typography>
+              <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                  <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--k-ink)', letterSpacing: '-0.01em', lineHeight: 1.3 }}>
+                    {template.name}
+                  </div>
+                </div>
 
-                  {/* Chips */}
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
-                    <Chip
-                      size="small"
-                      icon={<RoomIcon />}
-                      label={template.room_type.replace('_', ' ')}
-                      variant="outlined"
-                    />
-                    <Chip
-                      size="small"
-                      label={template.style.replace('_', ' ')}
-                      sx={{ bgcolor: STYLE_COLORS[template.style], color: 'white' }}
-                    />
-                    <Chip
-                      size="small"
-                      label={template.difficulty}
-                      sx={{
-                        bgcolor: DIFFICULTY_COLORS[template.difficulty],
-                        color: 'white',
-                        textTransform: 'capitalize',
-                      }}
-                    />
-                  </Box>
+                <p style={{ fontSize: '13px', color: 'var(--k-ink-4)', lineHeight: 1.5, marginBottom: '12px', flex: 1 }}>
+                  {template.description.slice(0, 100)}{template.description.length > 100 ? '…' : ''}
+                </p>
 
-                  {/* Stats */}
-                  <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <TimeIcon fontSize="small" color="action" />
-                      <Typography variant="body2">{template.estimated_hours}h</Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <MoneyIcon fontSize="small" color="action" />
-                      <Typography variant="body2">
-                        ${template.estimated_cost_low}-${template.estimated_cost_high}
-                      </Typography>
-                    </Box>
-                  </Box>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginBottom: '12px' }}>
+                  <Pill color={DIFFICULTY_COLOR[template.difficulty]}>{template.difficulty}</Pill>
+                  <Pill>{template.room_type.replace('_', ' ')}</Pill>
+                  <Pill>{template.style.replace('_', ' ')}</Pill>
+                </div>
 
-                  {/* Tags */}
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {template.tags.slice(0, 3).map((tag) => (
-                      <Chip key={tag} label={tag} size="small" variant="outlined" />
-                    ))}
-                  </Box>
-                </CardContent>
+                <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: 'var(--k-ink-4)', fontFamily: 'var(--font-mono), monospace', marginBottom: '14px' }}>
+                  <span>{template.estimated_hours}h</span>
+                  <span>${template.estimated_cost_low}–${template.estimated_cost_high}</span>
+                </div>
 
-                {/* Actions */}
-                <Box sx={{ p: 2, pt: 0 }}>
-                  <Button
-                    variant="contained"
-                    fullWidth
-                    onClick={() => handleViewDetails(template)}
-                    sx={{ mb: 1 }}
+                <div style={{ display: 'flex', gap: '6px', marginTop: 'auto' }}>
+                  <button
+                    onClick={() => { setSelectedTemplate(template); setDetailsOpen(true) }}
+                    className="k-btn k-btn-primary k-btn-sm"
+                    style={{ flex: 1, justifyContent: 'center' }}
                   >
-                    View Details
-                  </Button>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      startIcon={<DownloadIcon />}
-                      onClick={() => handleViewCutlist(template)}
-                      sx={{ flex: 1 }}
-                    >
-                      Cut List
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      startIcon={<CopyIcon />}
-                      onClick={() => handleUseTemplate(template)}
-                      sx={{ flex: 1 }}
-                    >
-                      Use Template
-                    </Button>
-                  </Box>
-                </Box>
-              </Card>
-            </Grid>
-          );
-        })}
-      </Grid>
+                    Details
+                  </button>
+                  <button
+                    onClick={() => handleViewCutlist(template)}
+                    className="k-btn k-btn-ghost k-btn-sm"
+                    style={{ flex: 1, justifyContent: 'center' }}
+                  >
+                    Cut List
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
-      {/* Details Dialog */}
-      <Dialog
-        open={detailsOpen}
-        onClose={() => setDetailsOpen(false)}
-        maxWidth="md"
-        fullWidth
-      >
+      {/* Details Modal */}
+      <Modal open={detailsOpen} onClose={() => setDetailsOpen(false)}>
         {selectedTemplate && (
           <>
-            <DialogTitle>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                  {selectedTemplate.name}
-                </Typography>
-                <Typography variant="h4">
-                  {INSPIRATION_AVATARS[selectedTemplate.inspiration]}
-                </Typography>
-              </Box>
-            </DialogTitle>
-            <DialogContent dividers>
-              <Typography variant="body1" paragraph>
+            <div style={{ padding: '24px 28px', borderBottom: '1px solid var(--k-border)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <h2 style={{ fontSize: '20px', fontWeight: 700, letterSpacing: '-0.03em', color: 'var(--k-ink)', marginBottom: '6px' }}>
+                    {selectedTemplate.name}
+                  </h2>
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    <Pill color={DIFFICULTY_COLOR[selectedTemplate.difficulty]}>{selectedTemplate.difficulty}</Pill>
+                    <Pill>{selectedTemplate.style.replace('_', ' ')}</Pill>
+                    <Pill>{selectedTemplate.room_type.replace('_', ' ')}</Pill>
+                  </div>
+                </div>
+                <button onClick={() => setDetailsOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--k-ink-4)', fontSize: '20px', lineHeight: 1, padding: 0 }}>×</button>
+              </div>
+            </div>
+
+            <div style={{ padding: '20px 28px' }}>
+              <p style={{ fontSize: '14px', color: 'var(--k-ink-3)', lineHeight: 1.7, marginBottom: '16px' }}>
                 {selectedTemplate.description}
-              </Typography>
+              </p>
 
               {selectedTemplate.inspiration_notes && (
-                <Alert severity="info" sx={{ mb: 2 }}>
-                  <strong>Inspiration:</strong> {selectedTemplate.inspiration_notes}
-                </Alert>
+                <div style={{ padding: '12px 14px', background: 'var(--k-bg-subtle)', border: '1px solid var(--k-border)', borderRadius: 'var(--k-r-md)', fontSize: '13px', color: 'var(--k-ink-3)', marginBottom: '16px' }}>
+                  {selectedTemplate.inspiration_notes}
+                </div>
               )}
 
-              <Grid container spacing={2}>
-                <Grid item xs={6}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Style
-                  </Typography>
-                  <Chip
-                    label={selectedTemplate.style.replace('_', ' ')}
-                    sx={{ bgcolor: STYLE_COLORS[selectedTemplate.style], color: 'white' }}
-                  />
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Room Type
-                  </Typography>
-                  <Chip
-                    icon={React.createElement(ROOM_ICONS[selectedTemplate.room_type] || CarpenterIcon)}
-                    label={selectedTemplate.room_type.replace('_', ' ')}
-                    variant="outlined"
-                  />
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Difficulty
-                  </Typography>
-                  <Chip
-                    label={selectedTemplate.difficulty}
-                    sx={{
-                      bgcolor: DIFFICULTY_COLORS[selectedTemplate.difficulty],
-                      color: 'white',
-                      textTransform: 'capitalize',
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Estimated Time
-                  </Typography>
-                  <Typography>{selectedTemplate.estimated_hours} hours</Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Estimated Cost
-                  </Typography>
-                  <Typography>
-                    ${selectedTemplate.estimated_cost_low} - ${selectedTemplate.estimated_cost_high}
-                  </Typography>
-                </Grid>
-              </Grid>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '16px' }}>
+                {[
+                  { label: 'Build Time', value: `${selectedTemplate.estimated_hours} hours` },
+                  { label: 'Estimated Cost', value: `$${selectedTemplate.estimated_cost_low}–$${selectedTemplate.estimated_cost_high}` },
+                ].map(item => (
+                  <div key={item.label} style={{ padding: '10px 12px', background: 'var(--k-surface)', border: '1px solid var(--k-border)', borderRadius: 'var(--k-r-md)' }}>
+                    <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono), monospace', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--k-ink-4)', marginBottom: '4px' }}>{item.label}</div>
+                    <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--k-ink)' }}>{item.value}</div>
+                  </div>
+                ))}
+              </div>
 
-              {/* Components */}
-              <Accordion sx={{ mt: 2 }}>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography sx={{ fontWeight: 'bold' }}>
-                    📋 Components ({selectedTemplate.components.length})
-                  </Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <List dense>
-                    {selectedTemplate.components.map((comp, idx) => (
-                      <React.Fragment key={idx}>
-                        <ListItem>
-                          <ListItemText
-                            primary={`${comp.name} (×${comp.quantity})`}
-                            secondary={`${comp.width}" × ${comp.height}" × ${comp.depth}" | ${comp.material}`}
-                          />
-                        </ListItem>
-                        {idx < selectedTemplate.components.length - 1 && <Divider />}
-                      </React.Fragment>
-                    ))}
-                  </List>
-                </AccordionDetails>
-              </Accordion>
+              <Section title={`Components (${selectedTemplate.components.length})`}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'var(--k-border)', border: '1px solid var(--k-border)', borderRadius: 'var(--k-r-md)', overflow: 'hidden' }}>
+                  {selectedTemplate.components.map((comp, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', background: 'var(--k-surface)', fontSize: '13px' }}>
+                      <span style={{ color: 'var(--k-ink)' }}>{comp.name} ×{comp.quantity}</span>
+                      <span style={{ color: 'var(--k-ink-4)', fontFamily: 'var(--font-mono), monospace', fontSize: '12px' }}>
+                        {comp.width}" × {comp.height}" × {comp.depth}" · {comp.material}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </Section>
 
-              {/* Hardware */}
-              <Accordion>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography sx={{ fontWeight: 'bold' }}>
-                    🔧 Hardware Needed ({selectedTemplate.hardware_needed.length})
-                  </Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <List dense>
-                    {selectedTemplate.hardware_needed.map((hw, idx) => (
-                      <React.Fragment key={idx}>
-                        <ListItem>
-                          <ListItemText
-                            primary={`${hw.name} (×${hw.quantity})`}
-                            secondary={hw.type}
-                          />
-                        </ListItem>
-                        {idx < selectedTemplate.hardware_needed.length - 1 && <Divider />}
-                      </React.Fragment>
-                    ))}
-                  </List>
-                </AccordionDetails>
-              </Accordion>
+              <Section title={`Hardware (${selectedTemplate.hardware_needed.length})`}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'var(--k-border)', border: '1px solid var(--k-border)', borderRadius: 'var(--k-r-md)', overflow: 'hidden' }}>
+                  {selectedTemplate.hardware_needed.map((hw, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', background: 'var(--k-surface)', fontSize: '13px' }}>
+                      <span style={{ color: 'var(--k-ink)' }}>{hw.name} ×{hw.quantity}</span>
+                      <span style={{ color: 'var(--k-ink-4)', fontSize: '12px' }}>{hw.type}</span>
+                    </div>
+                  ))}
+                </div>
+              </Section>
 
-              {/* Joinery */}
-              <Accordion>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography sx={{ fontWeight: 'bold' }}>
-                    🪚 Joinery Techniques
-                  </Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                    {selectedTemplate.joinery.map((j) => (
-                      <Chip key={j} label={j} icon={<BuildIcon />} />
-                    ))}
-                  </Box>
-                </AccordionDetails>
-              </Accordion>
+              <Section title="Joinery">
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {selectedTemplate.joinery.map(j => <Pill key={j}>{j}</Pill>)}
+                </div>
+              </Section>
 
-              {/* Finishing */}
-              <Accordion>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography sx={{ fontWeight: 'bold' }}>
-                    🎨 Finishing Suggestions
-                  </Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <List dense>
-                    {selectedTemplate.finishing_suggestions.map((finish, idx) => (
-                      <ListItem key={idx}>
-                        <ListItemIcon>
-                          <Typography>{idx + 1}</Typography>
-                        </ListItemIcon>
-                        <ListItemText primary={finish} />
-                      </ListItem>
-                    ))}
-                  </List>
-                </AccordionDetails>
-              </Accordion>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => setDetailsOpen(false)}>Close</Button>
-              <Button
-                variant="outlined"
-                startIcon={<DownloadIcon />}
-                onClick={() => {
-                  setDetailsOpen(false);
-                  handleViewCutlist(selectedTemplate);
-                }}
-              >
-                View Cut List
-              </Button>
-              <Button
-                variant="contained"
-                startIcon={<CopyIcon />}
-                onClick={() => handleUseTemplate(selectedTemplate)}
-              >
-                Use This Template
-              </Button>
-            </DialogActions>
+              <Section title="Finishing Suggestions">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {selectedTemplate.finishing_suggestions.map((f, i) => (
+                    <div key={i} style={{ fontSize: '13px', color: 'var(--k-ink-3)', display: 'flex', gap: '8px' }}>
+                      <span style={{ color: 'var(--k-amber)', flexShrink: 0 }}>{i + 1}.</span> {f}
+                    </div>
+                  ))}
+                </div>
+              </Section>
+            </div>
+
+            <div style={{ padding: '16px 28px', borderTop: '1px solid var(--k-border)', display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+              <button onClick={() => setDetailsOpen(false)} className="k-btn k-btn-ghost k-btn-sm">Close</button>
+              <button onClick={() => { setDetailsOpen(false); handleViewCutlist(selectedTemplate) }} className="k-btn k-btn-ghost k-btn-sm">Cut List</button>
+              <button onClick={() => handleUseTemplate(selectedTemplate)} className="k-btn k-btn-primary k-btn-sm">Use Template</button>
+            </div>
           </>
         )}
-      </Dialog>
+      </Modal>
 
-      {/* Cut List Dialog */}
-      <Dialog
-        open={cutlistOpen}
-        onClose={() => setCutlistOpen(false)}
-        maxWidth="md"
-        fullWidth
-      >
+      {/* Cut List Modal */}
+      <Modal open={cutlistOpen} onClose={() => setCutlistOpen(false)}>
         {cutlistData && (
           <>
-            <DialogTitle>
-              <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                📋 Cut List: {cutlistData.template_name}
-              </Typography>
-            </DialogTitle>
-            <DialogContent dividers>
-              {/* Summary */}
-              <Grid container spacing={2} sx={{ mb: 3 }}>
-                <Grid item xs={6} md={3}>
-                  <Card variant="outlined">
-                    <CardContent>
-                      <Typography color="text.secondary" variant="body2">
-                        Total Components
-                      </Typography>
-                      <Typography variant="h5">{cutlistData.summary.total_components}</Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-                <Grid item xs={6} md={3}>
-                  <Card variant="outlined">
-                    <CardContent>
-                      <Typography color="text.secondary" variant="body2">
-                        3/4" Sheets Needed
-                      </Typography>
-                      <Typography variant="h5">{cutlistData.summary.estimated_3_4_sheets}</Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-                <Grid item xs={6} md={3}>
-                  <Card variant="outlined">
-                    <CardContent>
-                      <Typography color="text.secondary" variant="body2">
-                        Lumber (Board Feet)
-                      </Typography>
-                      <Typography variant="h5">{cutlistData.summary.total_lumber_board_feet}</Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-                <Grid item xs={6} md={3}>
-                  <Card variant="outlined">
-                    <CardContent>
-                      <Typography color="text.secondary" variant="body2">
-                        Est. Cost
-                      </Typography>
-                      <Typography variant="h5">{cutlistData.summary.estimated_cost_range}</Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              </Grid>
+            <div style={{ padding: '24px 28px', borderBottom: '1px solid var(--k-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--k-ink)', margin: 0 }}>
+                Cut List: {cutlistData.template_name}
+              </h2>
+              <button onClick={() => setCutlistOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--k-ink-4)', fontSize: '20px', lineHeight: 1, padding: 0 }}>×</button>
+            </div>
 
-              {/* Cut List by Material */}
-              <Typography variant="h6" gutterBottom>
-                Materials Breakdown
-              </Typography>
-              <List>
-                {cutlistData.cut_list.map((item, idx) => (
-                  <React.Fragment key={idx}>
-                    <ListItem>
-                      <ListItemText
-                        primary={item.sheet || item.lumber}
-                        secondary={
-                          item.pieces
-                            ? `${item.pieces} pieces | ~${item.waste_pct}% waste`
-                            : `${item.board_feet} board feet`
-                        }
-                      />
-                      <IconButton
-                        onClick={() => copyToClipboard(item.sheet || item.lumber)}
-                        size="small"
-                      >
-                        <CopyIcon />
-                      </IconButton>
-                    </ListItem>
-                    <Divider />
-                  </React.Fragment>
+            <div style={{ padding: '20px 28px' }}>
+              {/* Summary stats */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '24px' }}>
+                {[
+                  { label: 'Components', value: cutlistData.summary.total_components },
+                  { label: '¾" Sheets', value: cutlistData.summary.estimated_3_4_sheets },
+                  { label: 'Board Feet', value: cutlistData.summary.total_lumber_board_feet },
+                  { label: 'Est. Cost', value: cutlistData.summary.estimated_cost_range },
+                ].map(item => (
+                  <div key={item.label} style={{ padding: '12px', background: 'var(--k-surface)', border: '1px solid var(--k-border)', borderRadius: 'var(--k-r-md)', textAlign: 'center' }}>
+                    <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono), monospace', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--k-ink-4)', marginBottom: '6px' }}>{item.label}</div>
+                    <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--k-ink)', fontFamily: 'var(--font-mono), monospace' }}>{item.value}</div>
+                  </div>
                 ))}
-              </List>
+              </div>
 
-              {/* Hardware List */}
-              <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-                Hardware List
-              </Typography>
-              <List>
-                {cutlistData.hardware_needed.map((hw, idx) => (
-                  <React.Fragment key={idx}>
-                    <ListItem>
-                      <ListItemText
-                        primary={`${hw.name} (×${hw.quantity})`}
-                        secondary={hw.type}
-                      />
-                    </ListItem>
-                    <Divider />
-                  </React.Fragment>
+              {/* Cut list */}
+              <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono), monospace', letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--k-ink-4)', marginBottom: '8px' }}>Materials</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'var(--k-border)', border: '1px solid var(--k-border)', borderRadius: 'var(--k-r-md)', overflow: 'hidden', marginBottom: '20px' }}>
+                {cutlistData.cut_list.map((item, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--k-surface)', fontSize: '13px' }}>
+                    <span style={{ color: 'var(--k-ink)' }}>{item.sheet || item.lumber}</span>
+                    <span style={{ color: 'var(--k-ink-4)', fontFamily: 'var(--font-mono), monospace', fontSize: '12px' }}>
+                      {item.pieces ? `${item.pieces} pcs · ${item.waste_pct}% waste` : `${item.board_feet} bf`}
+                    </span>
+                  </div>
                 ))}
-              </List>
+              </div>
 
-              {/* Joinery & Finishing */}
-              <Grid container spacing={2} sx={{ mt: 2 }}>
-                <Grid item xs={6}>
-                  <Typography variant="subtitle2">Joinery</Typography>
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {cutlistData.joinery.map((j) => (
-                      <Chip key={j} label={j} size="small" />
-                    ))}
-                  </Box>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="subtitle2">Finishing</Typography>
-                  <List dense>
-                    {cutlistData.finishing.map((f, idx) => (
-                      <ListItem key={idx} dense>
-                        <ListItemText primary={f} />
-                      </ListItem>
-                    ))}
-                  </List>
-                </Grid>
-              </Grid>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => setCutlistOpen(false)}>Close</Button>
-              <Button
-                variant="outlined"
-                startIcon={<CartIcon />}
-                onClick={() => {
-                  // TODO: Open materials shopping list
-                  alert('Shopping list feature coming soon!');
-                }}
-              >
-                View Materials & Suppliers
-              </Button>
-              <Button
-                variant="contained"
-                startIcon={<DownloadIcon />}
-                onClick={() => {
-                  // TODO: Export cut list as PDF/CSV
-                  alert('Export feature coming soon!');
-                }}
-              >
-                Export Cut List
-              </Button>
-            </DialogActions>
+              {/* Hardware */}
+              <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono), monospace', letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--k-ink-4)', marginBottom: '8px' }}>Hardware</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'var(--k-border)', border: '1px solid var(--k-border)', borderRadius: 'var(--k-r-md)', overflow: 'hidden', marginBottom: '20px' }}>
+                {cutlistData.hardware_needed.map((hw, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--k-surface)', fontSize: '13px' }}>
+                    <span style={{ color: 'var(--k-ink)' }}>{hw.name} ×{hw.quantity}</span>
+                    <span style={{ color: 'var(--k-ink-4)', fontSize: '12px' }}>{hw.type}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Joinery + Finishing */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono), monospace', letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--k-ink-4)', marginBottom: '8px' }}>Joinery</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+                    {cutlistData.joinery.map(j => <Pill key={j}>{j}</Pill>)}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono), monospace', letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--k-ink-4)', marginBottom: '8px' }}>Finishing</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {cutlistData.finishing.map((f, i) => <div key={i} style={{ fontSize: '13px', color: 'var(--k-ink-3)' }}>{f}</div>)}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ padding: '16px 28px', borderTop: '1px solid var(--k-border)', display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+              <button onClick={() => setCutlistOpen(false)} className="k-btn k-btn-ghost k-btn-sm">Close</button>
+              <button onClick={() => alert('Export coming soon!')} className="k-btn k-btn-primary k-btn-sm">Export</button>
+            </div>
           </>
         )}
-      </Dialog>
-    </Box>
-  );
+      </Modal>
+    </div>
+  )
 }

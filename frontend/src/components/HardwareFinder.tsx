@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 
 interface Hardware {
   id: number;
@@ -33,284 +33,198 @@ interface HardwareFinderProps {
   onClear?: () => void;
 }
 
-export default function HardwareFinder({
-  selectedHardware,
-  onSelect,
-  onClear
-}: HardwareFinderProps) {
-  const [loading, setLoading] = useState(false);
-  const [hardware, setHardware] = useState<Hardware[]>([]);
-  const [filteredHardware, setFilteredHardware] = useState<Hardware[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedType, setSelectedType] = useState<string>("all");
-  const [selectedSupplier, setSelectedSupplier] = useState<string>("all");
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [categories, setCategories] = useState<Record<string, Category>>({});
-  const [showSupplierSearch, setShowSupplierSearch] = useState(false);
-  const [supplierSearchResults, setSupplierSearchResults] = useState<Supplier[]>([]);
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  padding: "8px 11px",
+  background: "var(--k-surface)",
+  border: "1px solid var(--k-border-mid)",
+  borderRadius: "var(--k-r-md)",
+  fontSize: "13px",
+  color: "var(--k-ink)",
+  fontFamily: "var(--font-inter), system-ui, sans-serif",
+  outline: "none",
+  boxSizing: "border-box",
+}
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const selectStyle: React.CSSProperties = {
+  ...inputStyle,
+  cursor: "pointer",
+}
+
+export default function HardwareFinder({ selectedHardware, onSelect, onClear }: HardwareFinderProps) {
+  const [loading, setLoading] = useState(false)
+  const [hardware, setHardware] = useState<Hardware[]>([])
+  const [filteredHardware, setFilteredHardware] = useState<Hardware[]>([])
+  const [error, setError] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [selectedType, setSelectedType] = useState("all")
+  const [selectedSupplier, setSelectedSupplier] = useState("all")
+  const [suppliers, setSuppliers] = useState<Supplier[]>([])
+  const [categories, setCategories] = useState<Record<string, Category>>({})
+  const [showSupplierSearch, setShowSupplierSearch] = useState(false)
+  const [supplierSearchResults, setSupplierSearchResults] = useState<Supplier[]>([])
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
   useEffect(() => {
-    fetchSuppliers();
-    fetchCategories();
-    fetchHardware();
-  }, []);
+    fetchSuppliers()
+    fetchCategories()
+    fetchHardware()
+  }, [])
 
   useEffect(() => {
-    // Filter hardware based on search, type, and supplier
     const filtered = hardware.filter(hw => {
       const matchesSearch = hw.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (hw.description?.toLowerCase().includes(searchTerm.toLowerCase()));
-      const matchesType = selectedType === "all" || hw.type === selectedType;
-      const matchesSupplier = selectedSupplier === "all" || hw.supplier === selectedSupplier;
-      return matchesSearch && matchesType && matchesSupplier;
-    });
-    setFilteredHardware(filtered);
-  }, [searchTerm, selectedType, selectedSupplier, hardware]);
+        (hw.description?.toLowerCase().includes(searchTerm.toLowerCase()))
+      const matchesType = selectedType === "all" || hw.type === selectedType
+      const matchesSupplier = selectedSupplier === "all" || hw.supplier === selectedSupplier
+      return matchesSearch && matchesType && matchesSupplier
+    })
+    setFilteredHardware(filtered)
+  }, [searchTerm, selectedType, selectedSupplier, hardware])
 
   const fetchSuppliers = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/hardware/suppliers`);
-      if (response.ok) {
-        const data: Supplier[] = await response.json();
-        setSuppliers(data);
-      }
-    } catch (err) {
-      console.error("Failed to fetch suppliers:", err);
-    }
-  };
+      const res = await fetch(`${API_URL}/api/hardware/suppliers`)
+      if (res.ok) setSuppliers(await res.json())
+    } catch { /* silent */ }
+  }
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/hardware/categories`);
-      if (response.ok) {
-        const data = await response.json();
-        setCategories(data);
-      }
-    } catch (err) {
-      console.error("Failed to fetch categories:", err);
-    }
-  };
+      const res = await fetch(`${API_URL}/api/hardware/categories`)
+      if (res.ok) setCategories(await res.json())
+    } catch { /* silent */ }
+  }
 
   const fetchHardware = async () => {
+    setLoading(true); setError(null)
     try {
-      setLoading(true);
-      setError(null);
-
-      const params = new URLSearchParams();
-      if (selectedType !== "all") params.append("type", selectedType);
-      if (selectedSupplier !== "all") params.append("supplier", selectedSupplier);
-      if (searchTerm) params.append("search", searchTerm);
-
-      const response = await fetch(`${API_URL}/api/hardware?${params.toString()}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json"
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch hardware");
-      }
-
-      const data: Hardware[] = await response.json();
-      setHardware(data);
-    } catch (err) {
-      setError("Could not load hardware. Please try again.");
+      const params = new URLSearchParams()
+      if (selectedType !== "all") params.append("type", selectedType)
+      if (selectedSupplier !== "all") params.append("supplier", selectedSupplier)
+      if (searchTerm) params.append("search", searchTerm)
+      const res = await fetch(`${API_URL}/api/hardware?${params.toString()}`)
+      if (!res.ok) throw new Error("Failed to fetch hardware")
+      setHardware(await res.json())
+    } catch {
+      setError("Could not load hardware. Please try again.")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const searchSuppliers = async (query: string) => {
-    if (!query.trim()) {
-      setSupplierSearchResults([]);
-      return;
-    }
-    
+    if (!query.trim()) { setSupplierSearchResults([]); return }
     try {
-      const response = await fetch(`${API_URL}/api/hardware/search/${encodeURIComponent(query)}`);
-      if (response.ok) {
-        const data = await response.json();
-        setSupplierSearchResults(data);
-      }
-    } catch (err) {
-      console.error("Failed to search suppliers:", err);
-    }
-  };
+      const res = await fetch(`${API_URL}/api/hardware/search/${encodeURIComponent(query)}`)
+      if (res.ok) setSupplierSearchResults(await res.json())
+    } catch { /* silent */ }
+  }
 
   const seedDatabase = async () => {
+    setLoading(true)
     try {
-      setLoading(true);
-      const response = await fetch(`${API_URL}/api/hardware/seed`, {
-        method: "POST"
-      });
-      if (response.ok) {
-        const data = await response.json();
-        alert(data.message);
-        fetchHardware();
-      }
-    } catch (err) {
-      console.error("Failed to seed hardware:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+      const res = await fetch(`${API_URL}/api/hardware/seed`, { method: "POST" })
+      if (res.ok) { const d = await res.json(); alert(d.message); fetchHardware() }
+    } catch { /* silent */ } finally { setLoading(false) }
+  }
 
-  const handleSelect = (hw: Hardware) => {
-    if (onSelect) {
-      onSelect(hw);
-    }
-  };
+  const openSupplierLink = (url?: string) => { if (url) window.open(url, "_blank") }
+  const getSupplierInfo = (id?: string) => suppliers.find(s => s.id === id)
+  const getCategoryIcon = (type: string) => categories[type]?.icon || "·"
 
-  const handleClear = () => {
-    if (onClear) {
-      onClear();
-    }
-  };
-
-  const openSupplierLink = (url?: string) => {
-    if (url) {
-      window.open(url, "_blank");
-    }
-  };
-
-  const getSupplierInfo = (supplierId?: string): Supplier | undefined => {
-    if (!supplierId) return undefined;
-    return suppliers.find(s => s.id === supplierId);
-  };
-
-  const getTypeEmoji = (type: string): string => {
-    return categories[type]?.icon || "🔩";
-  };
-
-  const hardwareTypes = Array.from(new Set(hardware.map(hw => hw.type)));
+  const hardwareTypes = Array.from(new Set(hardware.map(hw => hw.type)))
 
   if (loading && hardware.length === 0) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <div className="animate-spin text-4xl mr-3">⚙️</div>
-        <p className="text-slate-400">Loading hardware...</p>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "48px", color: "var(--k-ink-4)", fontSize: "14px" }}>
+        Loading hardware...
       </div>
-    );
+    )
   }
 
   if (error) {
     return (
-      <div className="bg-red-900/20 border border-red-700 p-4 rounded-lg">
-        <p className="text-red-300 text-sm">{error}</p>
-        <button
-          onClick={fetchHardware}
-          className="mt-2 px-4 py-2 bg-red-700 hover:bg-red-600 text-white rounded text-sm"
-        >
-          Retry
-        </button>
+      <div style={{ padding: "14px 16px", background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: "var(--k-r-md)" }}>
+        <p style={{ fontSize: "13px", color: "#ef4444", marginBottom: "10px" }}>{error}</p>
+        <button onClick={fetchHardware} className="k-btn k-btn-ghost k-btn-sm">Retry</button>
       </div>
-    );
+    )
   }
 
   return (
-    <div className="space-y-4">
-      {/* Selected Hardware Display */}
+    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+
+      {/* Selected hardware banner */}
       {selectedHardware && (
-        <div className="bg-blue-900/20 border border-blue-700 p-4 rounded-lg">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <div className="flex items-center mb-2">
-                <span className="text-2xl mr-2">
-                  {getTypeEmoji(selectedHardware.type)}
-                </span>
-                <h3 className="font-semibold text-white text-lg">
-                  {selectedHardware.name}
-                </h3>
-              </div>
-              <p className="text-slate-400 text-sm mb-2">
-                {selectedHardware.description || "No description"}
-              </p>
-              <div className="flex items-center space-x-4 text-sm">
-                <span className="text-slate-300">
-                  Type: <span className="text-blue-400 ml-1">{selectedHardware.type}</span>
-                </span>
-                {selectedHardware.supplier && (
-                  <span className="text-slate-300">
-                    Supplier: 
-                    <span 
-                      className="ml-1 px-2 py-0.5 rounded text-xs"
-                      style={{ 
-                        backgroundColor: getSupplierInfo(selectedHardware.supplier)?.color + "40",
-                        color: getSupplierInfo(selectedHardware.supplier)?.color
-                      }}
-                    >
-                      {getSupplierInfo(selectedHardware.supplier)?.name || selectedHardware.supplier}
-                    </span>
-                  </span>
-                )}
-              </div>
+        <div style={{ padding: "14px 16px", background: "var(--k-surface)", border: "1px solid var(--k-border)", borderRadius: "var(--k-r-md)", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px" }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+              <span style={{ fontSize: "11px", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--k-ink-4)" }}>Selected</span>
             </div>
-            <div className="ml-4 flex flex-col items-end space-y-2">
-              <p className="text-2xl font-bold text-green-400">
-                ${selectedHardware.price.toFixed(2)}
-              </p>
-              <button
-                onClick={handleClear}
-                className="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-white rounded text-sm"
-              >
-                Clear
-              </button>
+            <div style={{ fontSize: "15px", fontWeight: 600, color: "var(--k-ink)", marginBottom: "4px" }}>{selectedHardware.name}</div>
+            {selectedHardware.description && (
+              <div style={{ fontSize: "13px", color: "var(--k-ink-3)", marginBottom: "8px" }}>{selectedHardware.description}</div>
+            )}
+            <div style={{ display: "flex", gap: "12px", fontSize: "12px", color: "var(--k-ink-4)" }}>
+              <span>{selectedHardware.type}</span>
+              {selectedHardware.supplier && (
+                <span style={{ color: getSupplierInfo(selectedHardware.supplier)?.color }}>
+                  {getSupplierInfo(selectedHardware.supplier)?.name || selectedHardware.supplier}
+                </span>
+              )}
+            </div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "8px", flexShrink: 0 }}>
+            <span style={{ fontSize: "18px", fontWeight: 700, fontFamily: "var(--font-mono), monospace", color: "var(--k-ink)" }}>
+              ${selectedHardware.price.toFixed(2)}
+            </span>
+            <div style={{ display: "flex", gap: "6px" }}>
+              <button onClick={onClear} className="k-btn k-btn-ghost k-btn-sm">Clear</button>
               {selectedHardware.url && (
-                <button
-                  onClick={() => openSupplierLink(selectedHardware.url)}
-                  className="px-3 py-1 bg-blue-700 hover:bg-blue-600 text-white rounded text-sm"
-                >
-                  View Supplier
-                </button>
+                <button onClick={() => openSupplierLink(selectedHardware.url)} className="k-btn k-btn-ghost k-btn-sm">View →</button>
               )}
             </div>
           </div>
         </div>
       )}
 
-      {/* Supplier Search Toggle */}
-      <div className="flex items-center justify-between">
+      {/* Toolbar */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <button
-          onClick={() => setShowSupplierSearch(!showSupplierSearch)}
-          className="text-sm text-blue-400 hover:text-blue-300 flex items-center"
+          onClick={() => setShowSupplierSearch(o => !o)}
+          style={{ fontSize: "12px", color: "var(--k-amber)", background: "none", border: "none", cursor: "pointer", padding: 0 }}
         >
-          🔗 {showSupplierSearch ? "Hide" : "Show"} Supplier Search
+          {showSupplierSearch ? "Hide" : "Show"} supplier search
         </button>
         <button
           onClick={seedDatabase}
-          className="text-sm text-green-400 hover:text-green-300"
+          style={{ fontSize: "12px", color: "var(--k-ink-4)", background: "none", border: "none", cursor: "pointer", padding: 0 }}
         >
-          📦 Seed Sample Data
+          Seed sample data
         </button>
       </div>
 
-      {/* Supplier Search Panel */}
+      {/* Supplier search panel */}
       {showSupplierSearch && (
-        <div className="bg-slate-800/50 border border-slate-700 p-4 rounded-lg space-y-3">
-          <h4 className="text-white font-medium">Search All Suppliers</h4>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="Search across all suppliers..."
-              className="flex-1 px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
-              onChange={(e) => searchSuppliers(e.target.value)}
-            />
-          </div>
+        <div style={{ padding: "16px", background: "var(--k-surface)", border: "1px solid var(--k-border)", borderRadius: "var(--k-r-md)" }}>
+          <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--k-ink)", marginBottom: "10px" }}>Search All Suppliers</div>
+          <input
+            style={inputStyle}
+            placeholder="Search across all suppliers..."
+            onChange={e => searchSuppliers(e.target.value)}
+          />
           {supplierSearchResults.length > 0 && (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {supplierSearchResults.map((supplier) => (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px", marginTop: "10px" }}>
+              {supplierSearchResults.map(supplier => (
                 <button
                   key={supplier.id}
                   onClick={() => openSupplierLink(supplier.search_url)}
-                  className="p-3 rounded-lg border border-slate-700 hover:border-slate-600 transition-colors"
-                  style={{ borderLeftColor: supplier.color, borderLeftWidth: 3 }}
+                  style={{ padding: "10px 12px", background: "var(--k-bg)", border: "1px solid var(--k-border)", borderLeft: `3px solid ${supplier.color}`, borderRadius: "var(--k-r-md)", textAlign: "left", cursor: "pointer" }}
                 >
-                  <div className="text-white font-medium text-sm">{supplier.name}</div>
-                  <div className="text-slate-400 text-xs">Open search →</div>
+                  <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--k-ink)", marginBottom: "2px" }}>{supplier.name}</div>
+                  <div style={{ fontSize: "11px", color: "var(--k-ink-4)" }}>Open search →</div>
                 </button>
               ))}
             </div>
@@ -318,156 +232,133 @@ export default function HardwareFinder({
         </div>
       )}
 
-      {/* Search and Filter */}
-      <div className="space-y-3">
-        <div>
-          <label className="block text-slate-300 text-sm mb-2">Search Hardware</label>
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by name or description..."
-            className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
+      {/* Search + filters */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+        <input
+          style={inputStyle}
+          type="text"
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          placeholder="Search by name or description..."
+        />
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
           <div>
-            <label className="block text-slate-300 text-sm mb-2">Filter by Type</label>
-            <select
-              value={selectedType}
-              onChange={(e) => setSelectedType(e.target.value)}
-              className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
-            >
+            <label style={{ display: "block", fontSize: "11px", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--k-ink-4)", marginBottom: "6px" }}>
+              Type
+            </label>
+            <select style={selectStyle} value={selectedType} onChange={e => setSelectedType(e.target.value)}>
               <option value="all">All Types</option>
               {Object.entries(categories).map(([key, cat]) => (
-                <option key={key} value={key}>
-                  {cat.icon} {cat.name}
-                </option>
+                <option key={key} value={key}>{cat.name}</option>
+              ))}
+              {hardwareTypes.filter(t => !categories[t]).map(t => (
+                <option key={t} value={t}>{t}</option>
               ))}
             </select>
           </div>
-
           <div>
-            <label className="block text-slate-300 text-sm mb-2">Filter by Supplier</label>
-            <select
-              value={selectedSupplier}
-              onChange={(e) => setSelectedSupplier(e.target.value)}
-              className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
-            >
+            <label style={{ display: "block", fontSize: "11px", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--k-ink-4)", marginBottom: "6px" }}>
+              Supplier
+            </label>
+            <select style={selectStyle} value={selectedSupplier} onChange={e => setSelectedSupplier(e.target.value)}>
               <option value="all">All Suppliers</option>
-              {suppliers.map((supplier) => (
-                <option key={supplier.id} value={supplier.id}>
-                  {supplier.name}
-                </option>
-              ))}
+              {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </div>
         </div>
       </div>
 
-      {/* Hardware List */}
+      {/* Hardware grid */}
       {filteredHardware.length === 0 ? (
-        <div className="text-center py-8 text-slate-400">
-          <p>No hardware found matching your search.</p>
-          <p className="text-sm mt-2">Try seeding sample data or adjusting filters.</p>
+        <div style={{ textAlign: "center", padding: "48px", color: "var(--k-ink-4)", fontSize: "14px" }}>
+          <p style={{ marginBottom: "4px" }}>No hardware found.</p>
+          <p style={{ fontSize: "12px" }}>Try seeding sample data or adjusting filters.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {filteredHardware.map(hw => {
-            const supplierInfo = getSupplierInfo(hw.supplier);
-            const categoryInfo = categories[hw.type];
-            
-            return (
-              <div
-                key={hw.id}
-                onClick={() => handleSelect(hw)}
-                className={`
-                  bg-slate-800 border-2 rounded-lg p-4 cursor-pointer transition-all
-                  hover:shadow-lg hover:border-blue-500
-                  ${selectedHardware?.id === hw.id
-                    ? "border-blue-500 shadow-lg shadow-blue-500/20"
-                    : "border-slate-700"
-                  }
-                `}
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center flex-1">
-                    <span className="text-2xl mr-2">
-                      {categoryInfo?.icon || "🔩"}
-                    </span>
-                    <h4 className="font-semibold text-white text-sm">
+        <>
+          <div style={{ fontSize: "12px", color: "var(--k-ink-4)", fontFamily: "var(--font-mono), monospace" }}>
+            {filteredHardware.length} of {hardware.length} items
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px" }}>
+            {filteredHardware.map(hw => {
+              const supplierInfo = getSupplierInfo(hw.supplier)
+              const categoryInfo = categories[hw.type]
+              const isSelected = selectedHardware?.id === hw.id
+              return (
+                <div
+                  key={hw.id}
+                  onClick={() => onSelect?.(hw)}
+                  style={{
+                    background: "var(--k-surface)",
+                    border: `1px solid ${isSelected ? "var(--k-amber)" : "var(--k-border)"}`,
+                    borderRadius: "var(--k-r-md)",
+                    padding: "14px 16px",
+                    cursor: "pointer",
+                    transition: "border-color 150ms ease",
+                  }}
+                  onMouseEnter={e => { if (!isSelected) e.currentTarget.style.borderColor = "var(--k-border-strong)" }}
+                  onMouseLeave={e => { if (!isSelected) e.currentTarget.style.borderColor = "var(--k-border)" }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "6px" }}>
+                    <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--k-ink)", lineHeight: 1.3, flex: 1, paddingRight: "8px" }}>
                       {hw.name}
-                    </h4>
-                  </div>
-                  <p className="text-lg font-bold text-green-400">
-                    ${hw.price.toFixed(2)}
-                  </p>
-                </div>
-
-                {hw.description && (
-                  <p className="text-slate-400 text-xs mb-3 line-clamp-2">
-                    {hw.description}
-                  </p>
-                )}
-
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400 px-2 py-1 bg-slate-700 rounded">
-                    {categoryInfo?.name || hw.type}
-                  </span>
-                  {supplierInfo && (
-                    <span 
-                      className="px-2 py-1 rounded text-xs"
-                      style={{ 
-                        backgroundColor: supplierInfo.color + "30",
-                        color: supplierInfo.color
-                      }}
-                    >
-                      {supplierInfo.name}
+                    </div>
+                    <span style={{ fontSize: "14px", fontWeight: 700, color: "var(--k-ink)", fontFamily: "var(--font-mono), monospace", flexShrink: 0 }}>
+                      ${hw.price.toFixed(2)}
                     </span>
+                  </div>
+
+                  {hw.description && (
+                    <p style={{ fontSize: "12px", color: "var(--k-ink-4)", marginBottom: "10px", lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                      {hw.description}
+                    </p>
+                  )}
+
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: "11px", padding: "2px 7px", border: "1px solid var(--k-border)", borderRadius: "var(--k-r-sm)", color: "var(--k-ink-4)" }}>
+                      {categoryInfo?.name || hw.type}
+                    </span>
+                    {supplierInfo && (
+                      <span style={{ fontSize: "11px", padding: "2px 7px", borderRadius: "var(--k-r-sm)", color: supplierInfo.color, background: supplierInfo.color + "18" }}>
+                        {supplierInfo.name}
+                      </span>
+                    )}
+                  </div>
+
+                  {hw.url && (
+                    <button
+                      onClick={e => { e.stopPropagation(); openSupplierLink(hw.url) }}
+                      style={{ marginTop: "10px", width: "100%", padding: "6px", fontSize: "12px", color: "var(--k-ink-3)", background: "var(--k-bg-subtle)", border: "1px solid var(--k-border)", borderRadius: "var(--k-r-sm)", cursor: "pointer" }}
+                    >
+                      View at supplier →
+                    </button>
                   )}
                 </div>
-
-                {hw.url && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openSupplierLink(hw.url);
-                    }}
-                    className="mt-3 w-full py-2 bg-slate-700 hover:bg-slate-600 text-white rounded text-xs"
-                  >
-                    View Supplier
-                  </button>
-                )}
-              </div>
-            );
-          })}
-        </div>
+              )
+            })}
+          </div>
+        </>
       )}
 
-      {/* Results Count */}
-      {filteredHardware.length > 0 && (
-        <p className="text-slate-400 text-sm text-center">
-          Showing {filteredHardware.length} of {hardware.length} hardware items
-        </p>
-      )}
-
-      {/* Supplier Legend */}
-      <div className="border-t border-slate-700 pt-4">
-        <h4 className="text-slate-300 text-sm font-medium mb-2">Supported Suppliers</h4>
-        <div className="flex flex-wrap gap-2">
-          {suppliers.map((supplier) => (
-            <button
-              key={supplier.id}
-              onClick={() => openSupplierLink(supplier.base_url)}
-              className="px-3 py-1 rounded-full text-xs text-white hover:opacity-80 transition-opacity"
-              style={{ backgroundColor: supplier.color }}
-            >
-              {supplier.name}
-            </button>
-          ))}
+      {/* Supplier legend */}
+      {suppliers.length > 0 && (
+        <div style={{ borderTop: "1px solid var(--k-border)", paddingTop: "16px" }}>
+          <div style={{ fontSize: "11px", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--k-ink-4)", marginBottom: "8px" }}>
+            Supported Suppliers
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+            {suppliers.map(s => (
+              <button
+                key={s.id}
+                onClick={() => openSupplierLink(s.base_url)}
+                style={{ padding: "4px 10px", borderRadius: "var(--k-r-sm)", fontSize: "12px", color: s.color, background: s.color + "15", border: `1px solid ${s.color}40`, cursor: "pointer" }}
+              >
+                {s.name}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
-  );
+  )
 }

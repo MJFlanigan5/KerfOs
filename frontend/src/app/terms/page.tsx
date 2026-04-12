@@ -1,83 +1,101 @@
 import { Metadata } from 'next'
-import Link from 'next/link'
+import { LegalShell, LegalSection, LegalCardGrid, LegalCard, LegalHighlight, LegalFooter } from '@/components/LegalShell'
 
 export const metadata: Metadata = {
   title: 'Terms of Service | KerfOS',
-  description: 'KerfOS terms of service - Rules and guidelines for using our service.',
+  description: 'KerfOS terms of service — rules and guidelines for using our platform.',
+}
+
+async function getTerms() {
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/gdpr/terms-of-service`,
+      { cache: 'no-store', signal: AbortSignal.timeout(4000) }
+    )
+    if (!response.ok) return null
+    return await response.json()
+  } catch {
+    return null
+  }
 }
 
 export default async function TermsPage() {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/gdpr/terms-of-service`, {
-    cache: 'no-store',
-  })
-  const terms = await response.json()
+  const terms = await getTerms()
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-lg shadow-sm p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{terms.title}</h1>
-          <p className="text-sm text-gray-500 mb-8">
-            Last updated: {terms.last_updated} | Version {terms.version}
+    <LegalShell
+      title="Terms of Service"
+      badge={terms?.version ? `v${terms.version}` : 'v1.0'}
+      subtitle={terms?.last_updated ? `Last updated ${terms.last_updated}` : 'Last updated March 2026'}
+    >
+      {/* Key points */}
+      <LegalCardGrid>
+        <LegalCard label="You Own Your Designs">
+          All cabinet projects you create are your intellectual property. We claim no rights.
+        </LegalCard>
+        <LegalCard label="Your Data is Protected">
+          Industry-standard encryption at rest and in transit. No data sold to third parties.
+        </LegalCard>
+        <LegalCard label="Cancel Anytime">
+          No long-term contracts. Cancel your subscription at any time, effective immediately.
+        </LegalCard>
+        <LegalCard label="Questions?">
+          Email support@kerfos.com — we respond within one business day.
+        </LegalCard>
+      </LegalCardGrid>
+
+      {/* Dynamic sections from API, or static fallback */}
+      {terms?.sections?.map((section: { title: string; content: string }, i: number) => (
+        <LegalSection key={i} title={section.title}>
+          <p style={{ fontSize: '14px', color: 'var(--k-ink-3)', lineHeight: 1.75 }}>
+            {section.content}
           </p>
+        </LegalSection>
+      )) ?? (
+        <>
+          <LegalSection title="1. Acceptance of Terms">
+            <p style={{ fontSize: '14px', color: 'var(--k-ink-3)', lineHeight: 1.75 }}>
+              By creating a KerfOS account or using our services, you agree to these terms.
+              If you do not agree, do not use KerfOS.
+            </p>
+          </LegalSection>
+          <LegalSection title="2. Permitted Use">
+            <p style={{ fontSize: '14px', color: 'var(--k-ink-3)', lineHeight: 1.75 }}>
+              KerfOS is licensed for personal and commercial cabinet design work. You may not
+              resell access to the platform, reverse-engineer the software, or use it to generate
+              content that violates applicable law.
+            </p>
+          </LegalSection>
+          <LegalSection title="3. Subscriptions and Billing">
+            <p style={{ fontSize: '14px', color: 'var(--k-ink-3)', lineHeight: 1.75 }}>
+              Paid plans are billed monthly or annually via Stripe. You may cancel at any time.
+              Refunds are available within 14 days of initial purchase; no refunds on renewals.
+            </p>
+          </LegalSection>
+          <LegalSection title="4. Intellectual Property">
+            <p style={{ fontSize: '14px', color: 'var(--k-ink-3)', lineHeight: 1.75 }}>
+              You retain full ownership of all designs created in KerfOS. We retain ownership
+              of the KerfOS software, trademarks, and underlying technology.
+            </p>
+          </LegalSection>
+          <LegalSection title="5. Limitation of Liability">
+            <p style={{ fontSize: '14px', color: 'var(--k-ink-3)', lineHeight: 1.75 }}>
+              KerfOS is provided &ldquo;as is.&rdquo; We are not liable for losses resulting from
+              manufacturing errors, inaccurate cut lists, or reliance on AI-generated suggestions.
+              Always verify dimensions before cutting.
+            </p>
+          </LegalSection>
+        </>
+      )}
 
-          <div className="prose prose-blue max-w-none">
-            {/* Sections */}
-            {terms.sections?.map((section: { title: string; content: string }, index: number) => (
-              <div key={index} className="mb-8">
-                <h2 className="text-xl font-semibold text-gray-900 mb-3">{section.title}</h2>
-                <p className="text-gray-600 leading-relaxed">{section.content}</p>
-              </div>
-            ))}
+      <LegalHighlight>
+        By using KerfOS you agree to these terms. Questions? Email{' '}
+        <a href="mailto:support@kerfos.com" style={{ color: 'var(--k-amber)', textDecoration: 'none' }}>
+          support@kerfos.com
+        </a>
+      </LegalHighlight>
 
-            {/* Highlights */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
-              <div className="bg-green-50 rounded-lg p-6">
-                <h3 className="font-semibold text-green-900 mb-2">✓ You Own Your Designs</h3>
-                <p className="text-sm text-green-700">
-                  All cabinet designs and projects you create in KerfOS are your intellectual property.
-                </p>
-              </div>
-              <div className="bg-blue-50 rounded-lg p-6">
-                <h3 className="font-semibold text-blue-900 mb-2">🔒 Your Data is Protected</h3>
-                <p className="text-sm text-blue-700">
-                  We use industry-standard security to protect your information.
-                </p>
-              </div>
-              <div className="bg-purple-50 rounded-lg p-6">
-                <h3 className="font-semibold text-purple-900 mb-2">💳 Cancel Anytime</h3>
-                <p className="text-sm text-purple-700">
-                  No long-term contracts. Cancel your subscription at any time.
-                </p>
-              </div>
-              <div className="bg-orange-50 rounded-lg p-6">
-                <h3 className="font-semibold text-orange-900 mb-2">📧 Contact Us</h3>
-                <p className="text-sm text-orange-700">
-                  Questions? Email us at support@kerfos.com
-                </p>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="border-t pt-6">
-              <p className="text-sm text-gray-500">
-                By using KerfOS, you agree to these terms. If you do not agree, please do not use our service.
-              </p>
-              <div className="mt-4 flex gap-4 text-sm">
-                <Link href="/privacy" className="text-blue-600 hover:underline">
-                  Privacy Policy
-                </Link>
-                <Link href="/cookies" className="text-blue-600 hover:underline">
-                  Cookie Policy
-                </Link>
-                <Link href="/gdpr" className="text-blue-600 hover:underline">
-                  GDPR Rights
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+      <LegalFooter />
+    </LegalShell>
   )
 }

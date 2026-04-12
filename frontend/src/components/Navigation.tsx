@@ -7,8 +7,10 @@ import { usePathname } from 'next/navigation'
 const NAV_LINKS = [
   { label: 'Builder',   href: '/design/builder' },
   { label: 'Optimize',  href: '/optimize' },
-  { label: 'Pricing',   href: '/#pricing' },
   { label: 'Community', href: '/community' },
+  { label: 'Pricing',   href: '/#pricing' },
+  { label: 'Changelog', href: '/changelog' },
+  { label: 'About',     href: '/about' },
 ]
 
 function KerfOSLogo() {
