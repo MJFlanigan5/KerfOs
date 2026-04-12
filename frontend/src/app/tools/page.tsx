@@ -2,29 +2,72 @@
 
 import Link from 'next/link'
 import { MapPin, ShoppingCart, Calculator, Thermometer, History } from 'lucide-react'
+import { ToolCard } from '@/components/ToolCard'
+import { PageHeader } from '@/components/PageHeader'
 
 const tools = [
-  { href: '/tools/localization', label: 'Local Suppliers', description: 'Find lumber yards and hardware stores near you', icon: MapPin },
-  { href: '/tools/stores', label: 'Store Integration', description: 'Order materials directly from Home Depot, Lowe\'s, and more', icon: ShoppingCart },
-  { href: '/tools/scratch-build', label: 'Scratch Build Calc', description: 'Calculate what tools and time a build from scratch requires', icon: Calculator },
-  { href: '/tools/climate', label: 'Climate Adjustment', description: 'Adjust tolerances for your local climate and humidity', icon: Thermometer },
-  { href: '/tools/history', label: 'Version History', description: 'Browse and restore previous versions of your designs', icon: History },
+  {
+    href: '/tools/localization',
+    label: 'Local Suppliers',
+    description: 'Find lumber yards and hardware stores near you with live stock and pricing',
+    icon: MapPin,
+    plan: 'Free' as const,
+    featured: true,
+  },
+  {
+    href: '/tools/stores',
+    label: 'Store Integration',
+    description: "Order materials directly from Home Depot, Lowe's, and more",
+    icon: ShoppingCart,
+    plan: 'Hobbyist' as const,
+  },
+  {
+    href: '/tools/scratch-build',
+    label: 'Scratch Build Calc',
+    description: 'Calculate what tools and time a build from scratch requires',
+    icon: Calculator,
+    plan: 'Free' as const,
+  },
+  {
+    href: '/tools/climate',
+    label: 'Climate Adjustment',
+    description: 'Adjust tolerances for your local climate and humidity automatically',
+    icon: Thermometer,
+    plan: 'Hobbyist' as const,
+  },
+  {
+    href: '/tools/history',
+    label: 'Version History',
+    description: 'Browse and restore previous versions of your designs',
+    icon: History,
+    plan: 'Hobbyist' as const,
+  },
 ]
 
 export default function ToolsPage() {
   return (
-    <div className="max-w-7xl mx-auto px-4 py-10">
-      <h1 className="text-3xl font-bold text-gray-900 mb-2">Tools</h1>
-      <p className="text-gray-600 mb-8">Utilities to plan, source, and manage your builds.</p>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {tools.map(({ href, label, description, icon: Icon }) => (
-          <Link key={href} href={href} className="group border border-gray-200 rounded-xl p-6 hover:border-blue-500 hover:shadow-md transition-all">
-            <div className="flex items-center gap-3 mb-2">
-              <Icon className="w-6 h-6 text-blue-600" />
-              <span className="text-lg font-semibold text-gray-900 group-hover:text-blue-600">{label}</span>
-            </div>
-            <p className="text-gray-500 text-sm">{description}</p>
+    <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '48px 40px' }}>
+      <PageHeader
+        crumbs={[{ label: 'kerfos', href: '/' }, { label: 'tools' }]}
+        title="Tools"
+        subtitle="Utilities to plan, source, and manage your builds."
+        action={
+          <Link href="/tools/localization" className="k-btn k-btn-primary k-btn-sm">
+            Find suppliers
           </Link>
+        }
+      />
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, 1fr)',
+          gap: '1px',
+          background: 'var(--k-border)',
+          border: '1px solid var(--k-border)',
+        }}
+      >
+        {tools.map((tool) => (
+          <ToolCard key={tool.href} {...tool} />
         ))}
       </div>
     </div>

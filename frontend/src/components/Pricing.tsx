@@ -1,154 +1,190 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { getTiers, createCheckout, getCurrentUser } from '@/lib/auth';
+import { useState } from 'react'
+import { SUBSCRIPTION_PLANS, type PlanId } from '@/lib/stripe'
 
-interface Tier {
-  tier: string;
-  name: string;
-  price: number;
-  limits: {
-    projects: number;
-    cut_lists_per_month: number;
-    exports_per_month: number;
-  };
-  features: string[];
-}
+const PLAN_ORDER: PlanId[] = ['free', 'hobbyist', 'pro', 'shop']
+
+const HIGHLIGHTED: PlanId = 'hobbyist'
 
 export default function PricingPage() {
-  const [tiers, setTiers] = useState<Tier[]>([]);
-  const [loading, setLoading] = useState<string | null>(null);
-  const [user, setUser] = useState<{ tier: string } | null>(null);
+  const [loading, setLoading] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    getTiers().then(setTiers).catch(console.error);
-    getCurrentUser().then(setUser).catch(() => setUser(null));
-  }, []);
-
-  const handleSelect = async (tier: string) => {
-    if (tier === 'free') return;
-    
-    setLoading(tier);
-    try {
-      const url = await createCheckout(tier);
-      window.location.href = url;
-    } catch (error) {
-      alert(error instanceof Error ? error.message : 'Checkout failed');
-      setLoading(null);
+  const handleSelect = async (planId: PlanId) => {
+    if (planId === 'free') {
+      window.location.href = '/register'
+      return
     }
-  };
 
-  const formatLimit = (limit: number) => {
-    return limit === -1 ? 'Unlimited' : limit;
-  };
+    setLoading(planId)
+    setError(null)
 
-  const featureLabels: Record<string, string> = {
-    basic_cut_list: 'Basic cut list generation',
-    advanced_nesting: 'Advanced 2D nesting optimization',
-    pdf: 'PDF export (no watermark)',
-    pdf_watermarked: 'PDF export (watermarked)',
-    dxf: 'DXF export for CNC',
-    csv: 'CSV export',
-    api_access: 'API access',
-    team: 'Team collaboration',
-    hardware_finder: 'Hardware finder integration',
-  };
+    try {
+      const res = await fetch('/api/stripe/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: planId }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok || !data.url) {
+        throw new Error(data.error || 'Checkout failed')
+      }
+
+      window.location.href = data.url
+    } catch (err: any) {
+      setError(err.message || 'Something went wrong')
+      setLoading(null)
+    }
+  }
 
   return (
-    <div className="bg-white py-24 sm:py-32">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="mx-auto max-w-4xl text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
+    <div style={{ padding: '96px 40px', background: 'var(--k-bg-subtle)', minHeight: '100vh' }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
+
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: '64px' }}>
+          <p className="k-label" style={{ marginBottom: '16px' }}>Pricing</p>
+          <h1 style={{
+            fontFamily: 'var(--font-sora), Sora, sans-serif',
+            fontSize: 'clamp(32px, 4vw, 52px)', fontWeight: 700,
+            letterSpacing: '-0.04em', lineHeight: 1.05,
+            color: 'var(--k-ink)', marginBottom: '20px',
+          }}>
             Simple, transparent pricing
           </h1>
-          <p className="mt-6 text-lg leading-8 text-gray-600">
-            From DIY projects to professional shops, we have a plan that fits your needs.
+          <p style={{ fontSize: '17px', color: 'var(--k-ink-3)', maxWidth: '480px', margin: '0 auto', lineHeight: 1.7 }}>
+            Free to start. Upgrade when you need more projects, formats, or a team.
           </p>
         </div>
 
-        <div className="mx-auto mt-16 grid max-w-lg grid-cols-1 gap-8 lg:max-w-4xl lg:grid-cols-4">
-          {tiers.map((tier) => {
-            const isCurrentTier = user?.tier === tier.tier;
-            const isFree = tier.tier === 'free';
-            
+        {/* Error */}
+        {error && (
+          <div style={{
+            maxWidth: '480px', margin: '0 auto 32px',
+            padding: '12px 16px',
+            background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)',
+            borderRadius: '4px', color: '#ef4444', fontSize: '14px', textAlign: 'center',
+          }}>
+            {error}
+          </div>
+        )}
+
+        {/* Cards */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: '12px',
+          alignItems: 'start',
+        }} className="pricing-grid">
+          {PLAN_ORDER.map(planId => {
+            const plan = SUBSCRIPTION_PLANS[planId]
+            const isHighlighted = planId === HIGHLIGHTED
+            const isLoading = loading === planId
+
             return (
               <div
-                key={tier.tier}
-                className={`relative flex flex-col rounded-3xl p-8 ${
-                  tier.tier === 'maker'
-                    ? 'bg-indigo-600 text-white ring-2 ring-indigo-600'
-                    : 'bg-white ring-1 ring-gray-200'
-                }`}
+                key={planId}
+                style={{
+                  background: isHighlighted ? 'var(--k-ink)' : 'var(--k-bg)',
+                  border: isHighlighted ? '1px solid rgba(6,182,212,0.3)' : '1px solid var(--k-border)',
+                  borderRadius: '6px',
+                  padding: '32px 28px',
+                  position: 'relative',
+                  display: 'flex', flexDirection: 'column',
+                }}
               >
-                {tier.tier === 'maker' && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-indigo-500 px-4 py-1 text-sm font-semibold text-white">
-                    Most Popular
-                  </div>
+                {isHighlighted && (
+                  <div style={{
+                    position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)',
+                    background: '#06b6d4', color: '#0a0e1c',
+                    fontSize: '10px', fontWeight: 700, letterSpacing: '0.08em',
+                    textTransform: 'uppercase', padding: '3px 12px', borderRadius: '2px',
+                    whiteSpace: 'nowrap',
+                  }}>Most popular</div>
                 )}
-                
-                <div className="mb-6">
-                  <h3 className={`text-lg font-semibold ${tier.tier === 'maker' ? 'text-white' : 'text-gray-900'}`}>
-                    {tier.name}
-                  </h3>
-                  <p className={`mt-2 text-sm ${tier.tier === 'maker' ? 'text-indigo-100' : 'text-gray-600'}`}>
-                    {tier.tier === 'free' && 'For trying out CutList Cloud'}
-                    {tier.tier === 'maker' && 'For serious DIYers and hobbyists'}
-                    {tier.tier === 'shop' && 'For small cabinet shops'}
-                    {tier.tier === 'pro' && 'For professional operations'}
-                  </p>
-                </div>
 
-                <div className="mb-6">
-                  <span className={`text-4xl font-bold tracking-tight ${tier.tier === 'maker' ? 'text-white' : 'text-gray-900'}`}>
-                    ${tier.price}
-                  </span>
-                  <span className={`text-sm ${tier.tier === 'maker' ? 'text-indigo-100' : 'text-gray-600'}`}>
-                    /month
-                  </span>
-                </div>
+                <p style={{
+                  fontSize: '11px', fontWeight: 600, letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  color: isHighlighted ? 'rgba(245,240,235,0.4)' : 'var(--k-ink-4)',
+                  marginBottom: '12px',
+                }}>{plan.name}</p>
 
-                <ul className="mb-8 space-y-3 text-sm">
-                  <li className={tier.tier === 'maker' ? 'text-indigo-100' : 'text-gray-600'}>
-                    • {formatLimit(tier.limits.projects)} projects
-                  </li>
-                  <li className={tier.tier === 'maker' ? 'text-indigo-100' : 'text-gray-600'}>
-                    • {formatLimit(tier.limits.cut_lists_per_month)} cut lists/month
-                  </li>
-                  <li className={tier.tier === 'maker' ? 'text-indigo-100' : 'text-gray-600'}>
-                    • {formatLimit(tier.limits.exports_per_month)} exports/month
-                  </li>
-                  {tier.features
-                    .filter((f) => f !== 'all')
-                    .map((feature) => (
-                      <li key={feature} className={tier.tier === 'maker' ? 'text-indigo-100' : 'text-gray-600'}>
-                        • {featureLabels[feature] || feature}
-                      </li>
-                    ))}
-                  {tier.tier === 'pro' && (
-                    <li className="text-gray-600">
-                      • All features included
-                    </li>
+                <div style={{ marginBottom: '8px', display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                  <span style={{
+                    fontFamily: 'var(--font-sora), Sora, sans-serif',
+                    fontSize: '40px', fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1,
+                    color: isHighlighted ? '#f5f0eb' : 'var(--k-ink)',
+                  }}>
+                    {plan.price === 0 ? 'Free' : `$${plan.price}`}
+                  </span>
+                  {plan.price > 0 && (
+                    <span style={{ fontSize: '13px', color: isHighlighted ? 'rgba(245,240,235,0.4)' : 'var(--k-ink-4)' }}>/mo</span>
                   )}
+                </div>
+
+                <p style={{
+                  fontSize: '12px', color: isHighlighted ? 'rgba(245,240,235,0.45)' : 'var(--k-ink-4)',
+                  marginBottom: '28px', lineHeight: 1.6,
+                }}>
+                  {planId === 'free'      && 'For trying it out'}
+                  {planId === 'hobbyist'  && 'For serious weekend builders'}
+                  {planId === 'pro'       && 'For YouTubers and small shops'}
+                  {planId === 'shop'      && 'Full production shop'}
+                </p>
+
+                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', flex: 1 }}>
+                  {plan.features.map(f => (
+                    <li key={f} style={{
+                      display: 'flex', gap: '10px', alignItems: 'flex-start',
+                      marginBottom: '10px', fontSize: '13px',
+                      color: isHighlighted ? 'rgba(245,240,235,0.65)' : 'var(--k-ink-2)',
+                    }}>
+                      <span style={{
+                        width: 16, height: 16, borderRadius: '50%', flexShrink: 0, marginTop: '1px',
+                        background: isHighlighted ? 'rgba(6,182,212,0.15)' : 'var(--k-amber-soft)',
+                        border: `1px solid ${isHighlighted ? 'rgba(6,182,212,0.3)' : 'rgba(6,182,212,0.2)'}`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                          <path d="M1 4L3 6.5L7 1.5" stroke={isHighlighted ? '#06b6d4' : 'var(--k-amber-dark)'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </span>
+                      {f}
+                    </li>
+                  ))}
                 </ul>
 
                 <button
-                  onClick={() => handleSelect(tier.tier)}
-                  disabled={isCurrentTier || loading !== null}
-                  className={`mt-auto rounded-full px-4 py-2.5 text-sm font-semibold transition-colors ${
-                    isFree
-                      ? 'bg-gray-100 text-gray-900 hover:bg-gray-200'
-                      : tier.tier === 'maker'
-                      ? 'bg-white text-indigo-600 hover:bg-indigo-50'
-                      : 'bg-indigo-600 text-white hover:bg-indigo-500'
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  onClick={() => handleSelect(planId)}
+                  disabled={loading !== null}
+                  style={{
+                    width: '100%', padding: '11px 16px',
+                    borderRadius: '3px', border: 'none', cursor: loading !== null ? 'not-allowed' : 'pointer',
+                    fontSize: '13px', fontWeight: 600, letterSpacing: '0.02em',
+                    opacity: loading !== null && !isLoading ? 0.5 : 1,
+                    transition: 'opacity 150ms',
+                    background: isHighlighted ? '#06b6d4' : planId === 'free' ? 'var(--k-surface)' : 'var(--k-ink)',
+                    color: isHighlighted ? '#0a0e1c' : planId === 'free' ? 'var(--k-ink-2)' : '#f5f0eb',
+                  }}
                 >
-                  {isCurrentTier ? 'Current plan' : isFree ? 'Get started' : loading === tier.tier ? 'Loading...' : 'Subscribe'}
+                  {isLoading ? 'Redirecting…' : planId === 'free' ? 'Get started free' : `Start ${plan.name}`}
                 </button>
               </div>
-            );
+            )
           })}
         </div>
+
+        {/* Footer note */}
+        <p style={{ textAlign: 'center', marginTop: '40px', fontSize: '13px', color: 'var(--k-ink-4)' }}>
+          All plans include SSL, automatic backups, and browser-based access — no software to install.
+          Cancel anytime.
+        </p>
+
       </div>
     </div>
-  );
+  )
 }

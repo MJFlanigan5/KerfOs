@@ -19,7 +19,7 @@ const DEMO_COMPONENTS: CanvasComponent[] = [
   { id: 'd1', type: 'box',     name: 'Cabinet Box',   width: 24,   height: 34.5, depth: 23.75, position: [0, 17.25, 0] },
   { id: 'd2', type: 'shelf',   name: 'Lower Shelf',   width: 22.5, height: 0.75, depth: 21.5,  position: [0, 10,    0] },
   { id: 'd3', type: 'shelf',   name: 'Upper Shelf',   width: 22.5, height: 0.75, depth: 21.5,  position: [0, 22,    0] },
-  { id: 'd4', type: 'divider', name: 'Center Divider',width: 0.75, height: 30,   depth: 21.5,  position: [5, 16.5,  0] },
+  { id: 'd4', type: 'divider', name: 'Center Divider',width: 0.75, height: 33,   depth: 21.5,  position: [5, 17.25, 0] },
 ]
 
 /* ─── Scroll Progress Bar ─────────────────────────────────────────────────── */
@@ -228,13 +228,26 @@ const PLANS = [
 ]
 
 /* ─── Main Page ───────────────────────────────────────────────────────────── */
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'KerfOS',
+  applicationCategory: 'DesignApplication',
+  operatingSystem: 'Web',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  description: 'CNC cabinet design software. Design parametric cabinets, generate cut lists, and export G-code for ShopBot, Shapeoko, X-Carve, and any GRBL machine.',
+  url: 'https://kerfos.com',
+  creator: { '@type': 'Organization', name: 'Modology Studios', url: 'https://modologystudios.com' },
+}
+
 export default function HomePage() {
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <ScrollBar />
 
       {/* ── HERO ─────────────────────────────────────────────────────── */}
-      <section className="hero-dark" style={{
+      <section className="hero-dark hero-section" style={{
         minHeight: 'calc(100vh - 60px)',
         background: '#0a0e1c',
         position: 'relative',
@@ -246,7 +259,7 @@ export default function HomePage() {
         <div className="hero-grid-bg" aria-hidden="true" />
 
         {/* Left: editorial copy */}
-        <div style={{
+        <div className="hero-copy" style={{
           padding: '80px 0 80px 60px',
           display: 'flex',
           flexDirection: 'column',
@@ -340,7 +353,7 @@ export default function HomePage() {
         </div>
 
         {/* Right: 3D canvas — full height, no border-radius, bleeds to edge */}
-        <div style={{ position: 'relative', borderLeft: '1px solid rgba(196,93,44,0.12)', overflow: 'hidden' }}>
+        <div className="hero-canvas" style={{ position: 'relative', borderLeft: '1px solid rgba(196,93,44,0.12)', overflow: 'hidden' }}>
           <CabinetPreview
             cabinet={DEMO_CABINET}
             material={null}
@@ -473,7 +486,7 @@ export default function HomePage() {
       <section style={{ padding: '96px 0' }}>
 
         {/* Feature 1: Cabinet Builder */}
-        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 40px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '80px', alignItems: 'center', marginBottom: '112px' }}>
+        <div className="feat-row" style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 40px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '80px', alignItems: 'center', marginBottom: '112px' }}>
           <div>
             <p className="k-label" style={{ marginBottom: '14px' }}>Design</p>
             <h2 style={{ fontFamily: 'var(--font-sora), Sora, sans-serif', fontSize: 'clamp(24px, 2.8vw, 36px)', fontWeight: 700, letterSpacing: '-0.03em', lineHeight: 1.12, color: 'var(--k-ink)', marginBottom: '20px' }}>
@@ -501,7 +514,7 @@ export default function HomePage() {
 
         {/* Feature 2: Board Yield — reversed */}
         <div style={{ background: 'var(--k-surface)', borderTop: '1px solid var(--k-border)', borderBottom: '1px solid var(--k-border)', padding: '96px 40px', marginBottom: '0' }}>
-          <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '80px', alignItems: 'center' }}>
+          <div className="feat-row feat-row-reverse" style={{ maxWidth: '1280px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '80px', alignItems: 'center' }}>
             <NestingVisual />
             <div>
               <p className="k-label" style={{ marginBottom: '14px' }}>Optimize</p>
@@ -529,7 +542,7 @@ export default function HomePage() {
         </div>
 
         {/* Feature 3: G-Code Export */}
-        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '96px 40px 0', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '80px', alignItems: 'center' }}>
+        <div className="feat-row" style={{ maxWidth: '1280px', margin: '0 auto', padding: '96px 40px 0', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '80px', alignItems: 'center' }}>
           <div>
             <p className="k-label" style={{ marginBottom: '14px' }}>Export</p>
             <h2 style={{ fontFamily: 'var(--font-sora), Sora, sans-serif', fontSize: 'clamp(24px, 2.8vw, 36px)', fontWeight: 700, letterSpacing: '-0.03em', lineHeight: 1.12, color: 'var(--k-ink)', marginBottom: '20px' }}>
@@ -819,16 +832,35 @@ export default function HomePage() {
       {/* ── Responsive overrides ──────────────────────────────────────── */}
       <style>{`
         @media (max-width: 900px) {
+          /* Hero */
+          .hero-section { grid-template-columns: 1fr !important; min-height: auto !important; }
+          .hero-canvas { display: none !important; }
+          .hero-copy { padding: 56px 24px 48px !important; max-width: 100% !important; }
+
+          /* Feature rows */
+          .feat-row { grid-template-columns: 1fr !important; gap: 40px !important; padding-left: 24px !important; padding-right: 24px !important; margin-bottom: 0 !important; }
+          .feat-row-reverse > *:first-child { order: 2; }
+          .feat-row-reverse > *:last-child { order: 1; }
+
+          /* Grids */
           .bento-grid { grid-template-columns: 1fr !important; }
           .bento-grid > div[style*="span 2"] { grid-column: span 1 !important; }
           .compare-grid { grid-template-columns: 1fr !important; }
           .compare-grid > div:nth-child(2) { display: none !important; }
           .pricing-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .footer-grid { grid-template-columns: 1fr 1fr !important; }
+
+          /* Section padding */
+          section[style*="padding: '96px 0'"] { padding: 48px 0 !important; }
+          section[style*="padding: '96px 40px'"] { padding: 48px 24px !important; }
+          section[style*="padding: '80px 40px'"] { padding: 48px 24px !important; }
+          section[style*="padding: '56px 40px'"] { padding: 32px 24px !important; }
         }
         @media (max-width: 600px) {
           .pricing-grid { grid-template-columns: 1fr !important; }
           .footer-grid { grid-template-columns: 1fr !important; }
+          .hero-copy { padding: 40px 20px 36px !important; }
+          .feat-row { padding-left: 20px !important; padding-right: 20px !important; gap: 32px !important; }
         }
       `}</style>
     </>
