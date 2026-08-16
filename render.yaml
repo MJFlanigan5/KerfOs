@@ -9,7 +9,7 @@ services:
     healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
-        value: postgresql://modology_user:zdP5PV1TolY4rzxUv9XMUvykVTL6wIXN@dpg-d6scv42a214c73bv0vug-a/modology
+        sync: false
       - key: PORT
         value: 8000
       - key: NEXT_PUBLIC_API_URL
